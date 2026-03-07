@@ -384,7 +384,7 @@ const transactions = await client.bankTransactions.listAll({
   search: "loyer",
 });
 
-// Clients & Fournisseurs
+// Clients
 const clients = await client.clients.list({ archived: false });
 // Devis
 const quotations = await client.quotations.list();
