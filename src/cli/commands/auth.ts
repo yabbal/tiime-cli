@@ -1,3 +1,4 @@
+import * as p from "@clack/prompts";
 import { defineCommand } from "citty";
 import { TokenManager } from "../../sdk/auth";
 import { output, outputError } from "../output";
@@ -11,26 +12,73 @@ export const authCommand = defineCommand({
 				email: {
 					type: "string",
 					description: "Adresse email",
-					required: true,
 				},
 				password: {
 					type: "string",
 					description: "Mot de passe",
-					required: true,
 				},
 			},
 			async run({ args }) {
+				const hasArgs = args.email && args.password;
+
+				if (hasArgs) {
+					// CI/script mode
+					try {
+						const tm = new TokenManager();
+						await tm.login(args.email, args.password);
+						const info = tm.getTokenInfo();
+						output({
+							status: "authenticated",
+							email: info.email,
+							expires_at: info.expiresAt?.toISOString(),
+						});
+					} catch (e) {
+						outputError(e);
+					}
+					return;
+				}
+
+				// Interactive mode
+				p.intro("Connexion à Tiime");
+
+				const email = await p.text({
+					message: "Adresse email",
+					placeholder: "vous@example.com",
+					validate: (value) => {
+						if (!value || !value.includes("@")) return "Adresse email invalide";
+					},
+				});
+
+				if (p.isCancel(email)) {
+					p.cancel("Connexion annulée.");
+					return;
+				}
+
+				const password = await p.password({
+					message: "Mot de passe",
+					validate: (value) => {
+						if (!value) return "Le mot de passe est requis";
+					},
+				});
+
+				if (p.isCancel(password)) {
+					p.cancel("Connexion annulée.");
+					return;
+				}
+
+				const s = p.spinner();
+				s.start("Authentification en cours...");
+
 				try {
 					const tm = new TokenManager();
-					await tm.login(args.email, args.password);
+					await tm.login(email, password);
 					const info = tm.getTokenInfo();
-					output({
-						status: "authenticated",
-						email: info.email,
-						expires_at: info.expiresAt?.toISOString(),
-					});
+					s.stop("Authentification réussie");
+					p.outro(`Connecté en tant que ${info.email ?? email}`);
 				} catch (e) {
-					outputError(e);
+					s.stop("Authentification échouée");
+					const message = e instanceof Error ? e.message : "Erreur inconnue";
+					p.cancel(message);
 				}
 			},
 		}),

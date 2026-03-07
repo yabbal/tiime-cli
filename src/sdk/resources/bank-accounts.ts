@@ -19,4 +19,13 @@ export class BankAccountsResource {
 			`/companies/${this.companyId}/bank_accounts/${bankAccountId}`,
 		);
 	}
+
+	async balance() {
+		const accounts = await this.list(true);
+		return accounts.map((a) => ({
+			name: a.name,
+			balance_amount: a.balance_amount,
+			currency: a.balance_currency,
+		}));
+	}
 }

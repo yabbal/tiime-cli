@@ -6,6 +6,22 @@ import { output, outputError } from "../output";
 export const bankCommand = defineCommand({
 	meta: { name: "bank", description: "Comptes bancaires et transactions" },
 	subCommands: {
+		balance: defineCommand({
+			meta: {
+				name: "balance",
+				description: "Afficher les soldes des comptes",
+			},
+			async run() {
+				try {
+					const client = new TiimeClient({ companyId: getCompanyId() });
+					const balances = await client.bankAccounts.balance();
+					output(balances);
+				} catch (e) {
+					outputError(e);
+				}
+			},
+		}),
+
 		accounts: defineCommand({
 			meta: { name: "accounts", description: "Lister les comptes bancaires" },
 			args: {
@@ -51,6 +67,18 @@ export const bankCommand = defineCommand({
 					description: "Éléments par page",
 					default: "100",
 				},
+				from: {
+					type: "string",
+					description: "Date de début (YYYY-MM-DD)",
+				},
+				to: {
+					type: "string",
+					description: "Date de fin (YYYY-MM-DD)",
+				},
+				search: {
+					type: "string",
+					description: "Rechercher par libellé",
+				},
 				all: {
 					type: "boolean",
 					description: "Récupérer toutes les pages",
@@ -66,6 +94,9 @@ export const bankCommand = defineCommand({
 							: undefined,
 						hide_refused: args["hide-refused"],
 						sorts: args.sort,
+						from: args.from,
+						to: args.to,
+						search: args.search,
 					};
 
 					if (args.all) {

@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -9,7 +10,95 @@ const AUTH0_CLIENT_ID = "iEbsbe3o66gcTBfGRa012kj1Rb6vjAND";
 const AUTH0_AUDIENCE = "https://chronos/";
 const CONFIG_DIR = join(homedir(), ".config", "tiime");
 const AUTH_FILE = join(CONFIG_DIR, "auth.json");
-const CREDS_FILE = join(CONFIG_DIR, "credentials.json");
+
+const KEYCHAIN_ACCOUNT = "tiime-cli";
+const KEYCHAIN_SERVICE = "tiime-credentials";
+
+interface Credentials {
+	email: string;
+	password: string;
+}
+
+const saveCredentialsToKeychain = (
+	email: string,
+	password: string,
+): boolean => {
+	try {
+		const payload = JSON.stringify({ email, password });
+		execSync(
+			`security add-generic-password -a "${KEYCHAIN_ACCOUNT}" -s "${KEYCHAIN_SERVICE}" -w '${payload.replace(/'/g, "'\\''")}' -U`,
+			{ stdio: "ignore" },
+		);
+		return true;
+	} catch {
+		return false;
+	}
+};
+
+const loadCredentialsFromKeychain = (): Credentials | null => {
+	try {
+		const raw = execSync(
+			`security find-generic-password -a "${KEYCHAIN_ACCOUNT}" -s "${KEYCHAIN_SERVICE}" -w`,
+			{ encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"] },
+		).trim();
+		const data: unknown = JSON.parse(raw);
+		if (
+			typeof data === "object" &&
+			data !== null &&
+			"email" in data &&
+			"password" in data &&
+			typeof (data as Credentials).email === "string" &&
+			typeof (data as Credentials).password === "string"
+		) {
+			return data as Credentials;
+		}
+		return null;
+	} catch {
+		return null;
+	}
+};
+
+const saveCredentialsToFile = (email: string, password: string): void => {
+	if (!existsSync(CONFIG_DIR)) {
+		mkdirSync(CONFIG_DIR, { recursive: true });
+	}
+	const filePath = join(CONFIG_DIR, "credentials.json");
+	writeFileSync(filePath, JSON.stringify({ email, password }, null, 2), {
+		mode: 0o600,
+	});
+};
+
+const loadCredentialsFromFile = (): Credentials | null => {
+	try {
+		const filePath = join(CONFIG_DIR, "credentials.json");
+		if (existsSync(filePath)) {
+			const data: unknown = JSON.parse(readFileSync(filePath, "utf-8"));
+			if (
+				typeof data === "object" &&
+				data !== null &&
+				"email" in data &&
+				"password" in data &&
+				typeof (data as Credentials).email === "string" &&
+				typeof (data as Credentials).password === "string"
+			) {
+				return data as Credentials;
+			}
+		}
+	} catch {
+		// Ignore
+	}
+	return null;
+};
+
+const saveCredentials = (email: string, password: string): void => {
+	if (!saveCredentialsToKeychain(email, password)) {
+		saveCredentialsToFile(email, password);
+	}
+};
+
+const loadCredentials = (): Credentials | null => {
+	return loadCredentialsFromKeychain() ?? loadCredentialsFromFile();
+};
 
 export class TokenManager {
 	private tokens: AuthTokens | null = null;
@@ -41,13 +130,13 @@ export class TokenManager {
 		};
 
 		this.saveToDisk();
-		this.saveCredentials(email, password);
+		saveCredentials(email, password);
 		return this.tokens;
 	}
 
 	async getValidToken(): Promise<string> {
 		if (!this.tokens || this.isExpired()) {
-			const creds = this.loadCredentials();
+			const creds = loadCredentials();
 			if (creds) {
 				const tokens = await this.login(creds.email, creds.password);
 				return tokens.access_token;
@@ -119,26 +208,5 @@ export class TokenManager {
 			mkdirSync(CONFIG_DIR, { recursive: true });
 		}
 		writeFileSync(AUTH_FILE, JSON.stringify(this.tokens, null, 2));
-	}
-
-	private saveCredentials(email: string, password: string): void {
-		if (!existsSync(CONFIG_DIR)) {
-			mkdirSync(CONFIG_DIR, { recursive: true });
-		}
-		writeFileSync(CREDS_FILE, JSON.stringify({ email, password }, null, 2), {
-			mode: 0o600,
-		});
-	}
-
-	private loadCredentials(): { email: string; password: string } | null {
-		try {
-			if (existsSync(CREDS_FILE)) {
-				const data = JSON.parse(readFileSync(CREDS_FILE, "utf-8"));
-				if (data.email && data.password) return data;
-			}
-		} catch {
-			// Ignore
-		}
-		return null;
 	}
 }

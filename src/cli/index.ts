@@ -3,11 +3,13 @@ import { authCommand } from "./commands/auth";
 import { bankCommand } from "./commands/bank";
 import { clientsCommand } from "./commands/clients";
 import { companyCommand } from "./commands/company";
+import { completionCommand } from "./commands/completion";
 import { documentsCommand } from "./commands/documents";
 import { expensesCommand } from "./commands/expenses";
 import { invoicesCommand } from "./commands/invoices";
 import { labelsCommand } from "./commands/labels";
 import { quotationsCommand } from "./commands/quotations";
+import { statusCommand } from "./commands/status";
 
 const main = defineCommand({
 	meta: {
@@ -25,6 +27,8 @@ const main = defineCommand({
 		expenses: expensesCommand,
 		documents: documentsCommand,
 		labels: labelsCommand,
+		status: statusCommand,
+		completion: completionCommand,
 	},
 });
 

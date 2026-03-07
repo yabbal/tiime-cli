@@ -1,5 +1,5 @@
 import type { $Fetch } from "ofetch";
-import type { Invoice, InvoiceCreateParams } from "../types";
+import type { Invoice, InvoiceCreateParams, InvoiceSendParams } from "../types";
 
 export interface InvoicesListParams {
 	sorts?: string;
@@ -101,6 +101,25 @@ export class InvoicesResource {
 				body: params,
 			},
 		);
+	}
+
+	send(invoiceId: number, params: InvoiceSendParams) {
+		return this.fetch<void>(
+			`/companies/${this.companyId}/invoices/${invoiceId}/send`,
+			{
+				method: "POST",
+				body: params,
+			},
+		);
+	}
+
+	async downloadPdf(invoiceId: number): Promise<ArrayBuffer> {
+		return this.fetch(
+			`/companies/${this.companyId}/invoices/${invoiceId}/pdf`,
+			{
+				headers: { Accept: "application/pdf" },
+			},
+		) as Promise<ArrayBuffer>;
 	}
 
 	delete(invoiceId: number) {

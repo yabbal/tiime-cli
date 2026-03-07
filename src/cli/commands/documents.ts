@@ -1,3 +1,5 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import { basename } from "node:path";
 import { defineCommand } from "citty";
 import { TiimeClient } from "../../sdk/client";
 import { getCompanyId } from "../config";
@@ -28,6 +30,63 @@ export const documentsCommand = defineCommand({
 						page: Number(args.page),
 					});
 					output(docs);
+				} catch (e) {
+					outputError(e);
+				}
+			},
+		}),
+
+		upload: defineCommand({
+			meta: { name: "upload", description: "Uploader un justificatif" },
+			args: {
+				file: {
+					type: "string",
+					description: "Chemin du fichier à uploader",
+					required: true,
+				},
+				type: {
+					type: "string",
+					description: "Type de document",
+				},
+			},
+			async run({ args }) {
+				try {
+					const client = new TiimeClient({ companyId: getCompanyId() });
+					const fileBuffer = readFileSync(args.file);
+					const filename = basename(args.file);
+					const result = await client.documents.upload(
+						fileBuffer,
+						filename,
+						args.type,
+					);
+					output(result);
+				} catch (e) {
+					outputError(e);
+				}
+			},
+		}),
+
+		download: defineCommand({
+			meta: { name: "download", description: "Télécharger un document" },
+			args: {
+				id: {
+					type: "string",
+					description: "ID du document",
+					required: true,
+				},
+				output: {
+					type: "string",
+					description: "Chemin de sortie du fichier",
+				},
+			},
+			async run({ args }) {
+				try {
+					const client = new TiimeClient({ companyId: getCompanyId() });
+					const documentId = Number(args.id);
+					const data = await client.documents.download(documentId);
+					const outputPath = args.output ?? `document-${documentId}`;
+					writeFileSync(outputPath, Buffer.from(data));
+					output({ status: "downloaded", path: outputPath });
 				} catch (e) {
 					outputError(e);
 				}
