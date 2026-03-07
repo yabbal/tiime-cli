@@ -1,4 +1,4 @@
-import { defineCommand, runMain } from "citty";
+import { defineCommand, renderUsage, runMain } from "citty";
 import { authCommand } from "./commands/auth";
 import { bankCommand } from "./commands/bank";
 import { clientsCommand } from "./commands/clients";
@@ -13,6 +13,7 @@ import { quotationsCommand } from "./commands/quotations";
 import { statusCommand } from "./commands/status";
 import { suppliersCommand } from "./commands/suppliers";
 import { versionCommand } from "./commands/version";
+import { translateHelp } from "./i18n";
 
 const main = defineCommand({
 	meta: {
@@ -38,4 +39,12 @@ const main = defineCommand({
 	},
 });
 
-runMain(main);
+const showTranslatedUsage = async (
+	cmd: Parameters<typeof renderUsage>[0],
+	parent?: Parameters<typeof renderUsage>[1],
+) => {
+	const usage = await renderUsage(cmd, parent);
+	console.log(`${translateHelp(usage)}\n`);
+};
+
+runMain(main, { showUsage: showTranslatedUsage });
