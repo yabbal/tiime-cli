@@ -3,8 +3,10 @@ tests/
 docs/
 api-responses/
 skill/
+homebrew/
 .github/
 .claude/
+.changeset/
 biome.json
 tsconfig.json
 tsup.config.ts
