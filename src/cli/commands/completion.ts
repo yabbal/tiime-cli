@@ -3,13 +3,23 @@ import { defineCommand } from "citty";
 const commands: Record<string, string[]> = {
 	auth: ["login", "logout", "status"],
 	company: ["list", "get", "use", "me"],
-	invoices: ["list", "get", "create", "duplicate", "delete"],
-	clients: ["list", "get"],
+	invoices: [
+		"list",
+		"get",
+		"create",
+		"duplicate",
+		"update",
+		"send",
+		"pdf",
+		"delete",
+	],
+	clients: ["list", "get", "create", "search"],
 	bank: ["accounts", "balance", "transactions", "unimputed"],
 	quotations: ["list", "get"],
 	expenses: ["list"],
-	documents: ["list", "categories"],
+	documents: ["list", "categories", "upload", "download"],
 	labels: ["list", "standard", "tags"],
+	status: [],
 	completion: [],
 };
 
