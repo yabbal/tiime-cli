@@ -96,11 +96,13 @@ const topLevelNames = Object.keys(commands);
 const commonFlags = ["--format", "--id", "--all"];
 
 const generateZsh = (): string => {
+	const esc = (s: string) => s.replace(/'/g, "'\\''");
+
 	const subcases = topLevelNames
 		.filter((cmd) => Object.keys(commands[cmd].subs).length > 0)
 		.map((cmd) => {
 			const subs = Object.entries(commands[cmd].subs)
-				.map(([name, desc]) => `'${name}:${desc}'`)
+				.map(([name, desc]) => `'${name}:${esc(desc)}'`)
 				.join(" ");
 			return `\t\t\t${cmd})\n\t\t\t\tlocal -a subcmds\n\t\t\t\tsubcmds=(${subs})\n\t\t\t\t_describe 'sous-commande' subcmds\n\t\t\t\t;;`;
 		})
@@ -111,7 +113,7 @@ const generateZsh = (): string => {
 _tiime() {
 \tlocal -a top_commands
 \ttop_commands=(
-${topLevelNames.map((c) => `\t\t'${c}:${commands[c].description}'`).join("\n")}
+${topLevelNames.map((c) => `\t\t'${c}:${esc(commands[c].description)}'`).join("\n")}
 \t)
 
 \tif (( CURRENT == 2 )); then
@@ -176,6 +178,8 @@ complete -F _tiime tiime
 };
 
 const generateFish = (): string => {
+	const esc = (s: string) => s.replace(/'/g, "\\'");
+
 	const lines = [
 		"# Disable file completions by default",
 		"complete -c tiime -f",
@@ -183,7 +187,7 @@ const generateFish = (): string => {
 		"# Top-level commands",
 		...topLevelNames.map(
 			(cmd) =>
-				`complete -c tiime -n '__fish_use_subcommand' -a '${cmd}' -d '${commands[cmd].description}'`,
+				`complete -c tiime -n '__fish_use_subcommand' -a '${cmd}' -d '${esc(commands[cmd].description)}'`,
 		),
 		"",
 		"# Subcommands",
@@ -197,7 +201,7 @@ const generateFish = (): string => {
 			const condition = `__fish_seen_subcommand_from ${cmd}; and not __fish_seen_subcommand_from ${subNames.join(" ")}`;
 			for (const [sub, desc] of Object.entries(subs)) {
 				lines.push(
-					`complete -c tiime -n '${condition}' -a '${sub}' -d '${desc}'`,
+					`complete -c tiime -n '${condition}' -a '${sub}' -d '${esc(desc)}'`,
 				);
 			}
 			lines.push("");
