@@ -186,6 +186,12 @@ export interface InvoiceLine {
 	discount_percentage?: number | null;
 }
 
+export interface InvoiceSendParams {
+	recipients: { email: string }[];
+	message?: string;
+	subject?: string;
+}
+
 export interface InvoiceCreateParams {
 	client?: { id: number } | null;
 	client_name?: string;

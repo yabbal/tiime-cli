@@ -1,3 +1,4 @@
+import { writeFileSync } from "node:fs";
 import { defineCommand } from "citty";
 import { TiimeClient } from "../../sdk/client";
 import type { InvoiceCreateParams, InvoiceLine } from "../../sdk/types";
@@ -95,18 +96,16 @@ export const invoicesCommand = defineCommand({
 				},
 				description: {
 					type: "string",
-					description: "Description de la ligne",
-					required: true,
+					description: "Description de la ligne (ligne simple)",
 				},
 				quantity: {
 					type: "string",
-					description: "Quantité",
+					description: "Quantité (ligne simple)",
 					default: "1",
 				},
 				"unit-price": {
 					type: "string",
-					description: "Prix unitaire HT",
-					required: true,
+					description: "Prix unitaire HT (ligne simple)",
 				},
 				unit: {
 					type: "string",
@@ -117,6 +116,11 @@ export const invoicesCommand = defineCommand({
 					description:
 						"Code TVA (normal=20%, reduced=10%, super_reduced=5.5%, none=0%)",
 					default: "normal",
+				},
+				lines: {
+					type: "string",
+					description:
+						'Multi-lignes en JSON : \'[{"description":"Dev","quantity":20,"unit_price":540,"unit":"day"}]\'',
 				},
 				"free-field": {
 					type: "string",
@@ -146,20 +150,49 @@ export const invoicesCommand = defineCommand({
 						page: 7,
 					};
 
-					const line: InvoiceLine = {
-						description: args.description,
-						quantity: Number(args.quantity),
-						unit_amount: Number(args["unit-price"]),
-						vat_type: { code: args.vat },
-						invoicing_unit: args.unit
-							? { id: unitMap[args.unit] ?? 1, code: args.unit }
-							: null,
-					};
+					let invoiceLines: InvoiceLine[];
+
+					if (args.lines) {
+						const parsed = JSON.parse(args.lines) as {
+							description: string;
+							quantity: number;
+							unit_price: number;
+							unit?: string;
+							vat?: string;
+						}[];
+						invoiceLines = parsed.map((l) => ({
+							description: l.description,
+							quantity: l.quantity,
+							unit_amount: l.unit_price,
+							vat_type: { code: l.vat ?? args.vat },
+							invoicing_unit: l.unit
+								? { id: unitMap[l.unit] ?? 1, code: l.unit }
+								: null,
+						}));
+					} else {
+						if (!args.description || !args["unit-price"]) {
+							outputError(
+								"--description et --unit-price sont requis pour une ligne simple (ou utilisez --lines pour du multi-lignes)",
+							);
+							return;
+						}
+						invoiceLines = [
+							{
+								description: args.description,
+								quantity: Number(args.quantity),
+								unit_amount: Number(args["unit-price"]),
+								vat_type: { code: args.vat },
+								invoicing_unit: args.unit
+									? { id: unitMap[args.unit] ?? 1, code: args.unit }
+									: null,
+							},
+						];
+					}
 
 					const params: InvoiceCreateParams = {
 						emission_date: args.date ?? today,
 						title: args.title ?? null,
-						lines: [line],
+						lines: invoiceLines,
 						status: args.status as "draft" | "saved",
 					};
 
@@ -217,6 +250,125 @@ export const invoicesCommand = defineCommand({
 						quantity: args.quantity ? Number(args.quantity) : undefined,
 					});
 					output(invoice);
+				} catch (e) {
+					outputError(e);
+				}
+			},
+		}),
+
+		update: defineCommand({
+			meta: { name: "update", description: "Mettre à jour une facture" },
+			args: {
+				id: {
+					type: "string",
+					description: "ID de la facture",
+					required: true,
+				},
+				title: {
+					type: "string",
+					description: "Nouveau titre de la facture",
+				},
+				status: {
+					type: "string",
+					description: "Nouveau statut (draft, saved)",
+				},
+				date: {
+					type: "string",
+					description: "Nouvelle date d'émission (YYYY-MM-DD)",
+				},
+				"free-field": {
+					type: "string",
+					description: "Nouveau champ libre",
+				},
+			},
+			async run({ args }) {
+				try {
+					const updates: Record<string, unknown> = {};
+					if (args.title !== undefined) updates.title = args.title;
+					if (args.status !== undefined) updates.status = args.status;
+					if (args.date !== undefined) updates.emission_date = args.date;
+					if (args["free-field"] !== undefined) {
+						updates.free_field = args["free-field"];
+						updates.free_field_enabled = true;
+					}
+
+					const client = new TiimeClient({ companyId: getCompanyId() });
+					const invoice = await client.invoices.update(
+						Number(args.id),
+						updates,
+					);
+					output(invoice);
+				} catch (e) {
+					outputError(e);
+				}
+			},
+		}),
+
+		send: defineCommand({
+			meta: { name: "send", description: "Envoyer une facture par email" },
+			args: {
+				id: {
+					type: "string",
+					description: "ID de la facture",
+					required: true,
+				},
+				email: {
+					type: "string",
+					description: "Adresse email du destinataire",
+					required: true,
+				},
+				subject: {
+					type: "string",
+					description: "Objet de l'email",
+				},
+				message: {
+					type: "string",
+					description: "Corps du message",
+				},
+			},
+			async run({ args }) {
+				try {
+					const client = new TiimeClient({ companyId: getCompanyId() });
+					await client.invoices.send(Number(args.id), {
+						recipients: [{ email: args.email }],
+						subject: args.subject,
+						message: args.message,
+					});
+					output({
+						status: "sent",
+						id: Number(args.id),
+						email: args.email,
+					});
+				} catch (e) {
+					outputError(e);
+				}
+			},
+		}),
+
+		pdf: defineCommand({
+			meta: {
+				name: "pdf",
+				description: "Télécharger le PDF d'une facture",
+			},
+			args: {
+				id: {
+					type: "string",
+					description: "ID de la facture",
+					required: true,
+				},
+				output: {
+					type: "string",
+					description:
+						"Chemin de sortie du fichier (défaut : facture-{id}.pdf)",
+				},
+			},
+			async run({ args }) {
+				try {
+					const client = new TiimeClient({ companyId: getCompanyId() });
+					const buffer = await client.invoices.downloadPdf(Number(args.id));
+					const filePath = args.output ?? `facture-${args.id}.pdf`;
+					writeFileSync(filePath, Buffer.from(buffer));
+					output({ status: "downloaded", path: filePath });
 				} catch (e) {
 					outputError(e);
 				}

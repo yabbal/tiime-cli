@@ -51,4 +51,25 @@ export class DocumentsResource {
 			`/companies/${this.companyId}/documents/${documentId}/preview`,
 		);
 	}
+
+	upload(file: Uint8Array, filename: string, type?: string) {
+		const formData = new FormData();
+		formData.append("file", new Blob([file as unknown as BlobPart]), filename);
+		if (type) {
+			formData.append("type", type);
+		}
+		return this.fetch<Document>(`/companies/${this.companyId}/documents`, {
+			method: "POST",
+			body: formData,
+		});
+	}
+
+	async download(documentId: number): Promise<ArrayBuffer> {
+		return this.fetch(
+			`/companies/${this.companyId}/documents/${documentId}/download`,
+			{
+				headers: { Accept: "application/octet-stream" },
+			},
+		) as Promise<ArrayBuffer>;
+	}
 }
