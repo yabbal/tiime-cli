@@ -165,7 +165,17 @@ const frameworkTranslations: Record<string, Record<string, string>> = {
 };
 
 export const getLang = (): string => {
-	return process.env.TIIME_LANG ?? "fr";
+	// Explicit env var takes priority
+	if (process.env.TIIME_LANG) return process.env.TIIME_LANG;
+
+	// Detect system language (LANG=fr_FR.UTF-8, LC_ALL, LANGUAGE)
+	const sysLang =
+		process.env.LC_ALL || process.env.LC_MESSAGES || process.env.LANG || "";
+	if (sysLang.startsWith("fr")) return "fr";
+	if (sysLang.startsWith("en")) return "en";
+
+	// Default to French
+	return "fr";
 };
 
 export const translateHelp = (text: string): string => {
