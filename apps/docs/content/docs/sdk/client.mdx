@@ -1,6 +1,6 @@
 ---
 title: TiimeClient
-description: Client principal — initialisation et exemples d'utilisation
+description: Client principal — initialisation, options et exemples d'utilisation
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
@@ -13,11 +13,33 @@ import { TiimeClient } from "tiime-cli";
 const client = new TiimeClient({ companyId: 12345 });
 ```
 
+### Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `companyId` | `number` | ID de l'entreprise (obligatoire) |
+| `tokens` | `AuthTokens` | Tokens d'authentification (optionnel, utilise le fichier local par défaut) |
+| `tokenManager` | `TokenManager` | Instance custom de TokenManager (optionnel) |
+
+<Callout type="info">
+  Par défaut, le client utilise le token et le `companyId` stockés localement par `tiime auth login` et `tiime company use`. Vous pouvez les surcharger via les options.
+</Callout>
+
+## Lister les entreprises
+
+```ts title="companies.ts"
+const companies = await client.listCompanies();
+// [{ id: 12345, name: "Mon entreprise", legal_form: "SAS", ... }]
+```
+
 ## Factures
 
 ```ts title="invoices.ts"
 // Lister les factures payées
 const invoices = await client.invoices.list({ status: "paid" });
+
+// Toutes les factures (pagination automatique)
+const all = await client.invoices.listAll({ status: "sent" });
 
 // Détails d'une facture
 const invoice = await client.invoices.get(42);
@@ -38,13 +60,26 @@ const created = await client.invoices.create({
   status: "draft",
 });
 
+// Modifier une facture
+await client.invoices.update(42, { title: "Nouveau titre" });
+
+// Dupliquer une facture
+const copy = await client.invoices.duplicate(42, {
+  emission_date: "2026-04-01",
+  quantity: 18,
+});
+
 // Envoyer par email
 await client.invoices.send(42, {
   recipients: [{ email: "client@example.com" }],
+  subject: "Facture mars 2026",
 });
 
 // Télécharger le PDF
 const pdf = await client.invoices.downloadPdf(42);
+
+// Supprimer un brouillon
+await client.invoices.delete(42);
 ```
 
 ## Banque
@@ -53,27 +88,143 @@ const pdf = await client.invoices.downloadPdf(42);
 // Soldes de tous les comptes
 const balances = await client.bankAccounts.balance();
 
+// Liste des comptes
+const accounts = await client.bankAccounts.list(true); // true = actifs uniquement
+
 // Transactions avec filtres et pagination automatique
 const transactions = await client.bankTransactions.listAll({
   from: "2026-01-01",
   to: "2026-01-31",
   search: "loyer",
 });
+
+// Transactions non imputées
+const unimputed = await client.bankTransactions.unimputed();
+
+// Suggestions de label pour une transaction
+const suggestions = await client.bankTransactions.labelSuggestions(317543840);
+
+// Imputer une transaction
+await client.bankTransactions.impute(317543840, [
+  {
+    label: { id: 3901280 },
+    amount: 25.50,
+    documents: [],
+    accountant_detail_requests: [],
+  },
+]);
 ```
 
-## Clients et devis
+## Clients
 
 ```ts title="clients.ts"
+// Lister les clients actifs
 const clients = await client.clients.list({ archived: false });
+
+// Rechercher
+const results = await client.clients.search("acme");
+
+// Créer un client
+const newClient = await client.clients.create({
+  name: "ACME Corp",
+  email: "contact@acme.com",
+  siren_or_siret: "12345678901234",
+  city: "Paris",
+});
+
+// Détails d'un client
+const detail = await client.clients.get(100);
+```
+
+## Devis
+
+```ts title="quotations.ts"
 const quotations = await client.quotations.list();
+const quotation = await client.quotations.get(10);
+
+const created = await client.quotations.create({
+  date: "2026-03-01",
+  client: { id: 100 },
+  lines: [
+    {
+      description: "Mission conseil",
+      quantity: 10,
+      unit_amount: 600,
+      vat_type: { code: "normal" },
+      invoicing_unit: { id: 3, code: "day" },
+    },
+  ],
+});
+
+await client.quotations.send(10, {
+  recipients: [{ email: "client@example.com" }],
+});
+
+const pdf = await client.quotations.downloadPdf(10);
 ```
 
-## Utilisateur
+## Documents
 
-```ts title="user.ts"
+```ts title="documents.ts"
+// Lister les documents
+const docs = await client.documents.list({ types: "receipt" });
+
+// Catégories disponibles
+const categories = await client.documents.categories();
+
+// Uploader un justificatif
+const file = new Uint8Array(/* ... */);
+const uploaded = await client.documents.upload(file, "facture.pdf", "receipt");
+
+// Télécharger
+const content = await client.documents.download(123);
+```
+
+## Notes de frais, Labels, Utilisateurs
+
+```ts title="others.ts"
+// Notes de frais
+const expenses = await client.expenseReports.list();
+const expense = await client.expenseReports.get(5);
+await client.expenseReports.create({ name: "Déplacement client" });
+
+// Labels
+const labels = await client.labels.list();        // Personnalisés
+const standard = await client.labels.standard();   // Plan comptable
+const tags = await client.labels.tags();           // Tags
+
+// Utilisateur
 const me = await client.users.me();
+
+// Entreprise
+const company = await client.company.get();
+const period = await client.company.accountingPeriod();
 ```
+
+## Gestion des erreurs
+
+```ts title="errors.ts"
+import { TiimeClient, TiimeError } from "tiime-cli";
+
+try {
+  const invoice = await client.invoices.get(99999);
+} catch (error) {
+  if (error instanceof TiimeError) {
+    console.error(`Erreur ${error.status}: ${error.message}`);
+    console.error(`Endpoint: ${error.endpoint}`);
+  }
+}
+```
+
+L'objet `TiimeError` contient :
+
+| Propriété | Type | Description |
+|-----------|------|-------------|
+| `message` | `string` | Message d'erreur |
+| `status` | `number` | Code HTTP (404, 422, etc.) |
+| `endpoint` | `string` | URL de l'API appelée |
+| `details` | `unknown` | Détails supplémentaires (optionnel) |
 
 <Callout type="info" title="Retry automatique">
-  Le client intègre un mécanisme de retry avec backoff exponentiel sur les erreurs 429 (rate limit) et 5xx (erreurs serveur).
+  Le client intègre un mécanisme de retry avec backoff exponentiel sur les erreurs **429** (rate limit) et **5xx** (erreurs serveur). Les erreurs 4xx (sauf 429) sont remontées immédiatement.
 </Callout>

@@ -3,6 +3,8 @@ title: Devis
 description: Créer, lister, envoyer et télécharger des devis
 ---
 
+import { Callout } from "fumadocs-ui/components/callout";
+
 ## Lister
 
 ```bash title="Terminal"
@@ -10,31 +12,65 @@ tiime quotations list
 tiime quotations list --format table
 ```
 
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--format` | `json\|table\|csv` | `json` | Format de sortie |
+
 ## Consulter
 
 ```bash title="Terminal"
 tiime quotations get --id 10
 ```
 
+Retourne les détails complets du devis : client, lignes, montants, statut, date.
+
 ## Créer
 
 ```bash title="Terminal"
 tiime quotations create \
   --client-id 100 \
-  --description "Mission conseil" \
+  --description "Mission de conseil stratégique" \
   --unit-price 600 \
   --quantity 10
 ```
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--client-id` | `number` | — | ID du client existant |
+| `--description` | `string` | — | Description de la prestation (obligatoire) |
+| `--unit-price` | `number` | — | Prix unitaire HT (obligatoire) |
+| `--quantity` | `number` | `1` | Quantité |
+| `--date` | `string` | aujourd'hui | Date du devis (YYYY-MM-DD) |
+| `--title` | `string` | — | Titre du devis |
+| `--vat` | `string` | `normal` | TVA : `normal`, `reduced`, `super_reduced`, `none` |
+| `--status` | `string` | `draft` | Statut initial : `draft` ou `saved` |
 
 ## Télécharger le PDF
 
 ```bash title="Terminal"
 tiime quotations pdf --id 10
-tiime quotations pdf --id 10 --output devis.pdf
+tiime quotations pdf --id 10 --output devis-conseil.pdf
 ```
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--id` | `number` | — | ID du devis (obligatoire) |
+| `--output` | `string` | `devis-{id}.pdf` | Chemin du fichier de sortie |
 
 ## Envoyer par email
 
 ```bash title="Terminal"
 tiime quotations send --id 10 --email client@example.com
+tiime quotations send --id 10 --email client@example.com --subject "Devis mission conseil"
 ```
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `--id` | `number` | ID du devis (obligatoire) |
+| `--email` | `string` | Adresse email du destinataire (obligatoire) |
+| `--subject` | `string` | Objet personnalisé de l'email |
+| `--message` | `string` | Corps personnalisé de l'email |
+
+<Callout type="info" title="Workflow devis → facture">
+  Tiime permet de convertir un devis accepté en facture directement depuis l'interface web. Utilisez `tiime open quotations` pour y accéder rapidement.
+</Callout>

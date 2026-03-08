@@ -3,13 +3,20 @@ title: Clients
 description: Lister, consulter, créer et rechercher des clients
 ---
 
+import { Callout } from "fumadocs-ui/components/callout";
+
 ## Lister
 
 ```bash title="Terminal"
-tiime clients list                 # Clients actifs
-tiime clients list --archived      # Inclure les archivés
-tiime clients list --format table  # Affichage tableau
+tiime clients list                 # Clients actifs uniquement
+tiime clients list --archived      # Inclure les clients archivés
+tiime clients list --format table
 ```
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--archived` | `boolean` | `false` | Inclure les clients archivés |
+| `--format` | `json\|table\|csv` | `json` | Format de sortie |
 
 ## Consulter
 
@@ -17,29 +24,63 @@ tiime clients list --format table  # Affichage tableau
 tiime clients get --id 100
 ```
 
+Retourne les détails complets du client : nom, adresse, SIRET, email, téléphone, statut professionnel, etc.
+
 ## Créer
 
 ```bash title="Terminal"
-tiime clients create --name "ACME" --email contact@acme.com
+tiime clients create \
+  --name "ACME Corp" \
+  --email contact@acme.com \
+  --siret 12345678901234 \
+  --address "10 rue de la Paix" \
+  --postal-code 75002 \
+  --city Paris
 ```
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--name` | `string` | — | Nom du client (obligatoire) |
+| `--email` | `string` | — | Adresse email |
+| `--phone` | `string` | — | Numéro de téléphone |
+| `--address` | `string` | — | Adresse postale |
+| `--postal-code` | `string` | — | Code postal |
+| `--city` | `string` | — | Ville |
+| `--siret` | `string` | — | SIREN ou SIRET |
+| `--professional` | `boolean` | `true` | Client professionnel (B2B) |
 
 ## Rechercher
 
 ```bash title="Terminal"
 tiime clients search --query "acme"
+tiime clients search --query "acme" --format table
 ```
 
-## Exemples
+| Option | Type | Description |
+|--------|------|-------------|
+| `--query` | `string` | Terme de recherche (obligatoire) |
+| `--format` | `json\|table\|csv` | Format de sortie |
+
+Recherche par nom sur l'ensemble des clients (actifs et archivés).
+
+## Exemples avec jq
 
 ```bash title="Terminal"
-# Export CSV
+# Export CSV simple
 tiime clients list --format csv > clients.csv
 
-# Noms des clients avec jq
+# Extraire les noms des clients
 tiime clients list | jq '.[].name'
 
-# CSV personnalisé avec jq
+# CSV personnalisé (id, nom, ville)
 tiime clients list \
   | jq -r '["id","nom","ville"], (.[] | [.id, .name, .city]) | @csv' \
-  > clients.csv
+  > clients-custom.csv
+
+# Compter les clients par ville
+tiime clients list | jq 'group_by(.city) | map({ville: .[0].city, count: length})'
 ```
+
+<Callout type="info">
+  Les clients sont référencés par leur ID dans les commandes de création de factures (`--client-id`) et de devis.
+</Callout>

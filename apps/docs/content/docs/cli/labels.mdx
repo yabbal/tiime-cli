@@ -5,26 +5,63 @@ description: Labels personnalisés, labels standards et tags comptables
 
 import { Callout } from "fumadocs-ui/components/callout";
 
+Les labels servent à catégoriser les transactions bancaires et les documents comptables. Tiime distingue trois types de labels.
+
 ## Labels personnalisés
+
+Labels créés par l'utilisateur pour ses propres besoins de classification.
 
 ```bash title="Terminal"
 tiime labels list
+tiime labels list --format table
 ```
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--format` | `json\|table\|csv` | `json` | Format de sortie |
 
 ## Labels standards
 
-Labels du plan comptable français :
+Labels du plan comptable français. Ce sont les catégories comptables officielles utilisées pour l'imputation des transactions.
 
 ```bash title="Terminal"
 tiime labels standard
+tiime labels standard --format table
 ```
 
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--format` | `json\|table\|csv` | `json` | Format de sortie |
+
 <Callout type="info">
-  Les labels standards correspondent aux catégories comptables officielles (loyer, restaurant, fournitures, etc.).
+  Les labels standards correspondent aux catégories comptables officielles : loyer, restaurant, fournitures de bureau, honoraires, déplacements, etc. Ils sont utilisés lors de l'imputation des transactions bancaires.
 </Callout>
 
 ## Tags
 
+Tags personnalisés pour un classement transversal.
+
 ```bash title="Terminal"
 tiime labels tags
+tiime labels tags --format table
 ```
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--format` | `json\|table\|csv` | `json` | Format de sortie |
+
+## Utilisation avec l'imputation
+
+Les IDs des labels sont utilisés par la commande `tiime bank impute` pour catégoriser les transactions bancaires :
+
+```bash title="Terminal"
+# 1. Trouver le label approprié
+tiime labels standard | jq '.[] | select(.name | test("restaurant"; "i"))'
+
+# 2. Imputer la transaction avec l'ID du label
+tiime bank impute --id 317543840 --label-id 3901280
+```
+
+<Callout type="info" title="Astuce">
+  Utilisez `jq` pour filtrer les labels par nom et trouver rapidement l'ID dont vous avez besoin.
+</Callout>

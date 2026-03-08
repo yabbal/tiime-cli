@@ -3,12 +3,20 @@ title: Notes de frais
 description: Lister, consulter et créer des notes de frais
 ---
 
+import { Callout } from "fumadocs-ui/components/callout";
+
 ## Lister
 
 ```bash title="Terminal"
 tiime expenses list
+tiime expenses list --sort metadata.date:asc
 tiime expenses list --format table
 ```
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--sort` | `string` | `metadata.date:desc` | Tri (ex: `metadata.date:asc`) |
+| `--format` | `json\|table\|csv` | `json` | Format de sortie |
 
 ## Consulter
 
@@ -16,8 +24,30 @@ tiime expenses list --format table
 tiime expenses get --id 5
 ```
 
+Retourne les détails complets de la note de frais : nom, date, montant total, pièces jointes.
+
 ## Créer
 
 ```bash title="Terminal"
-tiime expenses create --name "Déplacement client"
+tiime expenses create --name "Déplacement client Lyon"
+tiime expenses create --name "Repas équipe" --date 2026-03-01
+```
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--name` | `string` | — | Nom de la note de frais (obligatoire) |
+| `--date` | `string` | — | Date (YYYY-MM-DD) |
+
+<Callout type="info">
+  Les notes de frais créées via le CLI apparaissent dans l'interface Tiime. Vous pouvez y ajouter des justificatifs et détails depuis l'app web ou mobile.
+</Callout>
+
+## Exemples avec jq
+
+```bash title="Terminal"
+# Lister les noms de toutes les notes
+tiime expenses list | jq '.[].name'
+
+# Total des montants
+tiime expenses list | jq '[.[].total_amount // 0] | add'
 ```

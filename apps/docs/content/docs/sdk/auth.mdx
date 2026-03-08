@@ -1,31 +1,84 @@
 ---
 title: Authentification
-description: Gestion des tokens et configuration du SDK
+description: Gestion des tokens, stockage et résilience du SDK
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
 
 ## Fonctionnement
 
-Le SDK utilise automatiquement le token généré par `tiime auth login`. Les tokens sont rafraîchis automatiquement à expiration via Auth0.
+Le SDK utilise automatiquement le token généré par `tiime auth login`. L'authentification passe par **Auth0** (OAuth2 password grant). Les tokens sont rafraîchis automatiquement à expiration.
 
 <Callout type="info">
   Pas besoin de gérer l'authentification manuellement — connectez-vous une fois via le CLI, le SDK fait le reste.
 </Callout>
 
-## Fichiers de configuration
+## TokenManager
+
+Le `TokenManager` est la classe interne qui gère le cycle de vie des tokens :
+
+```ts title="auth.ts"
+import { TokenManager } from "tiime-cli";
+
+const tm = new TokenManager();
+
+// Se connecter
+await tm.login("email@example.com", "password");
+
+// Obtenir un token valide (renouvelle si expiré)
+const token = await tm.getValidToken();
+
+// Vérifier l'état d'authentification
+tm.isAuthenticated(); // true | false
+
+// Info sur le token actuel
+tm.getTokenInfo(); // { email, expiresAt }
+
+// Se déconnecter
+tm.logout();
+```
+
+### Méthodes
+
+| Méthode | Retour | Description |
+|---------|--------|-------------|
+| `login(email, password)` | `Promise<AuthTokens>` | Authentification via Auth0 |
+| `getValidToken()` | `Promise<string>` | Token valide (renouvellement auto) |
+| `isAuthenticated()` | `boolean` | État de connexion |
+| `getTokenInfo()` | `{ email, expiresAt }` | Infos sur le token courant |
+| `logout()` | `void` | Supprime le token local |
+
+## Stockage des credentials
 
 | Fichier | Contenu |
 |---------|---------|
-| `~/.config/tiime/auth.json` | Token d'authentification (access + refresh) |
+| `~/.config/tiime/auth.json` | Token d'authentification (access_token + expires_at) |
 | `~/.config/tiime/config.json` | Configuration locale (companyId actif) |
+| `~/.config/tiime/credentials.json` | Email/password (fallback) |
+
+<Callout type="info" title="Keychain macOS">
+  Sur macOS, les credentials sont stockés de préférence dans le **Keychain** système pour plus de sécurité. Le fichier `credentials.json` est utilisé en fallback si le Keychain n'est pas disponible.
+</Callout>
 
 ## Retry et résilience
 
-Le SDK inclut un mécanisme de retry avec backoff exponentiel :
+Le SDK inclut un mécanisme de retry automatique avec backoff exponentiel :
 
-| Code HTTP | Comportement |
-|-----------|-------------|
-| **429** | Too Many Requests — retry après délai |
-| **5xx** | Erreurs serveur — retry avec backoff |
-| **4xx** (autres) | Erreur immédiate, pas de retry |
+| Code HTTP | Comportement | Détail |
+|-----------|-------------|--------|
+| **429** | Retry après délai | Too Many Requests — respect du rate limit |
+| **5xx** | Retry avec backoff | Erreurs serveur temporaires |
+| **401** | Renouvellement token | Tente de rafraîchir le token puis retry |
+| **4xx** (autres) | Erreur immédiate | Pas de retry — erreur client |
+
+## Headers personnalisés
+
+Le SDK envoie des headers spécifiques à l'API Tiime :
+
+```
+tiime-app: tiime
+tiime-app-version: 4.30.3
+tiime-app-platform: web
+```
+
+Ces headers simulent le client web Tiime pour assurer la compatibilité avec l'API.

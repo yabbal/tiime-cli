@@ -1,0 +1,53 @@
+---
+title: Vue d'ensemble
+description: Utiliser Tiime CLI avec des agents IA comme Claude Code
+---
+
+import { Cards, Card } from "fumadocs-ui/components/card";
+import { Callout } from "fumadocs-ui/components/callout";
+import { Wand2, Workflow, Download } from "lucide-react";
+
+Tiime CLI est conçu dès le départ pour fonctionner avec des **agents IA**. Toutes les commandes retournent du JSON structuré sur stdout, ce qui les rend directement exploitables par des LLMs et des outils d'automatisation.
+
+## Pourquoi Tiime CLI + agents IA ?
+
+Les agents IA comme [Claude Code](https://docs.anthropic.com/en/docs/claude-code) peuvent exécuter des commandes shell et analyser leur sortie. Tiime CLI transforme votre comptabilité en une **API en ligne de commande** que les agents peuvent piloter de manière autonome :
+
+- **Audit automatique** : analyser les transactions non imputées et proposer des corrections
+- **Facturation récurrente** : créer, dupliquer et envoyer des factures chaque mois
+- **Résumé financier** : générer un point de situation en langage naturel
+- **Rapprochement bancaire** : identifier les transactions à traiter en priorité
+
+<Callout type="info" title="JSON natif = agent-friendly">
+  Le format JSON par défaut permet aux agents de parser directement les données sans scraping ni regex. Chaque commande retourne des objets structurés avec des IDs, montants, dates et statuts exploitables.
+</Callout>
+
+## Le système de Skills
+
+Un **skill** est un fichier Markdown (`SKILL.md`) qui fournit à un agent IA toutes les connaissances nécessaires pour utiliser un outil. Il contient :
+
+- La liste des commandes disponibles avec leur syntaxe
+- Les workflows typiques étape par étape
+- Les triggers (mots-clés qui activent le skill)
+- Les bonnes pratiques et pièges à éviter
+
+Le skill Tiime CLI est distribué via [skills.sh](https://skills.sh), la plateforme de partage de skills pour agents IA.
+
+## Installation du skill
+
+```bash title="Terminal"
+npx skills add yabbal/tiime
+```
+
+Une fois installé, votre agent IA (Claude Code, etc.) détecte automatiquement quand utiliser Tiime CLI en fonction du contexte de votre conversation.
+
+## En savoir plus
+
+<Cards>
+  <Card icon={<Wand2 />} title="Le Skill Tiime" href="/docs/agents/skill">
+    Structure, triggers et contenu du fichier SKILL.md.
+  </Card>
+  <Card icon={<Workflow />} title="Workflows agents" href="/docs/agents/workflows">
+    Exemples concrets de tâches automatisables par un agent IA.
+  </Card>
+</Cards>

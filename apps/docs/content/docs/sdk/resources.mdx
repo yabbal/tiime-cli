@@ -1,96 +1,191 @@
 ---
 title: Ressources API
-description: Référence complète des 10 ressources du SDK
+description: Référence complète des 10 ressources du SDK avec paramètres et types
 ---
 
 import { Accordions, Accordion } from "fumadocs-ui/components/accordion";
+import { Callout } from "fumadocs-ui/components/callout";
 
-Chaque ressource est accessible via `client.<resource>`.
+Chaque ressource est accessible via `client.<resource>`. Cette page détaille toutes les méthodes, leurs paramètres et options.
 
 <Accordions>
   <Accordion title="Invoices — client.invoices">
-    | Méthode | Description |
-    |---------|-------------|
-    | `list(options?)` | Lister les factures (filtres: status, sort) |
-    | `get(id)` | Détails d'une facture |
-    | `create(data)` | Créer une facture |
-    | `update(id, data)` | Modifier une facture |
-    | `duplicate(id, options?)` | Dupliquer (avec date/quantité) |
-    | `send(id, data)` | Envoyer par email |
-    | `downloadPdf(id)` | Télécharger le PDF |
-    | `delete(id)` | Supprimer un brouillon |
+    | Méthode | Paramètres | Retour | Description |
+    |---------|-----------|--------|-------------|
+    | `list(params?)` | `{ status?, sorts?, page?, pageSize? }` | `Promise<Invoice[]>` | Lister les factures (paginé) |
+    | `listAll(params?)` | `{ status?, sorts?, pageSize? }` | `Promise<Invoice[]>` | Toutes les factures (pagination auto) |
+    | `get(id)` | `number` | `Promise<Invoice>` | Détails d'une facture |
+    | `create(data)` | `InvoiceCreateParams` | `Promise<Invoice>` | Créer une facture |
+    | `update(id, data)` | `number, Partial<InvoiceCreateParams>` | `Promise<Invoice>` | Modifier une facture |
+    | `duplicate(id, overrides?)` | `number, { emission_date?, quantity? }` | `Promise<Invoice>` | Dupliquer une facture |
+    | `send(id, data)` | `number, { recipients, subject?, message? }` | `Promise<void>` | Envoyer par email |
+    | `downloadPdf(id)` | `number` | `Promise<ArrayBuffer>` | Télécharger le PDF |
+    | `delete(id)` | `number` | `Promise<void>` | Supprimer un brouillon |
+
+    **InvoiceCreateParams :**
+
+    | Champ | Type | Obligatoire | Description |
+    |-------|------|:-----------:|-------------|
+    | `emission_date` | `string` | oui | Date d'émission (YYYY-MM-DD) |
+    | `lines` | `InvoiceLine[]` | oui | Lignes de la facture |
+    | `client` | `{ id: number }` | — | Client existant |
+    | `client_name` | `string` | — | Nom du client (si pas de `client`) |
+    | `status` | `"draft" \| "saved"` | — | Statut (défaut: `draft`) |
+    | `title` | `string` | — | Titre |
+    | `free_field` | `string` | — | Champ libre |
+    | `due_date` | `string` | — | Date d'échéance |
+    | `template` | `string` | — | Template de facture |
+
+    **Filtres `list()` :**
+
+    | Champ | Description |
+    |-------|-------------|
+    | `status` | `draft`, `saved`, `sent`, `paid` |
+    | `sorts` | Ex: `invoice_number:desc` (défaut) |
+    | `page` | Numéro de page (défaut: 1) |
+    | `pageSize` | Résultats par page (défaut: 25) |
   </Accordion>
 
   <Accordion title="Quotations — client.quotations">
-    | Méthode | Description |
-    |---------|-------------|
-    | `list(options?)` | Lister les devis |
-    | `get(id)` | Détails d'un devis |
-    | `create(data)` | Créer un devis |
-    | `send(id, data)` | Envoyer par email |
-    | `downloadPdf(id)` | Télécharger le PDF |
+    | Méthode | Paramètres | Retour | Description |
+    |---------|-----------|--------|-------------|
+    | `list(expand?)` | `string` (défaut: `"invoices"`) | `Promise<Quotation[]>` | Lister les devis |
+    | `get(id)` | `number` | `Promise<Quotation>` | Détails d'un devis |
+    | `create(data)` | `QuotationCreateParams` | `Promise<Quotation>` | Créer un devis |
+    | `send(id, data)` | `number, { recipients, subject?, message? }` | `Promise<void>` | Envoyer par email |
+    | `downloadPdf(id)` | `number` | `Promise<ArrayBuffer>` | Télécharger le PDF |
+
+    **QuotationCreateParams :**
+
+    | Champ | Type | Obligatoire | Description |
+    |-------|------|:-----------:|-------------|
+    | `date` | `string` | oui | Date du devis (YYYY-MM-DD) |
+    | `lines` | `InvoiceLine[]` | oui | Lignes du devis |
+    | `client` | `{ id: number }` | — | Client existant |
+    | `client_name` | `string` | — | Nom du client |
+    | `title` | `string` | — | Titre |
+    | `status` | `"draft" \| "saved"` | — | Statut (défaut: `draft`) |
   </Accordion>
 
   <Accordion title="Clients — client.clients">
-    | Méthode | Description |
-    |---------|-------------|
-    | `list(options?)` | Lister les clients |
-    | `get(id)` | Détails d'un client |
-    | `create(data)` | Créer un client |
-    | `search(query)` | Rechercher par nom |
+    | Méthode | Paramètres | Retour | Description |
+    |---------|-----------|--------|-------------|
+    | `list(params?)` | `{ archived? }` | `Promise<Client[]>` | Lister les clients |
+    | `get(id)` | `number` | `Promise<Client>` | Détails d'un client |
+    | `create(data)` | `ClientCreateParams` | `Promise<Client>` | Créer un client |
+    | `search(query)` | `string` | `Promise<Client[]>` | Rechercher par nom |
+
+    **ClientCreateParams :**
+
+    | Champ | Type | Obligatoire | Description |
+    |-------|------|:-----------:|-------------|
+    | `name` | `string` | oui | Nom du client |
+    | `email` | `string` | — | Email |
+    | `phone` | `string` | — | Téléphone |
+    | `address` | `string` | — | Adresse |
+    | `postal_code` | `string` | — | Code postal |
+    | `city` | `string` | — | Ville |
+    | `siren_or_siret` | `string` | — | SIREN ou SIRET |
+    | `professional` | `boolean` | — | Client professionnel (défaut: `true`) |
   </Accordion>
 
   <Accordion title="BankAccounts — client.bankAccounts">
-    | Méthode | Description |
-    |---------|-------------|
-    | `list()` | Lister les comptes |
-    | `balance()` | Soldes de tous les comptes |
+    | Méthode | Paramètres | Retour | Description |
+    |---------|-----------|--------|-------------|
+    | `list(enabled?)` | `boolean` (défaut: `true`) | `Promise<BankAccount[]>` | Lister les comptes |
+    | `get(id)` | `number` | `Promise<BankAccount>` | Détails d'un compte |
+    | `balance()` | — | `Promise<Array<{name, balance_amount, balance_currency}>>` | Soldes de tous les comptes actifs |
   </Accordion>
 
   <Accordion title="BankTransactions — client.bankTransactions">
-    | Méthode | Description |
-    |---------|-------------|
-    | `list(options?)` | Lister les transactions (paginé) |
-    | `listAll(options?)` | Toutes les transactions (pagination auto) |
-    | `get(id)` | Détails d'une transaction |
-    | `unimputed()` | Transactions non imputées |
+    | Méthode | Paramètres | Retour | Description |
+    |---------|-----------|--------|-------------|
+    | `list(params?)` | `BankTransactionsListParams` | `Promise<BankTransactionsResponse>` | Lister (paginé) |
+    | `listAll(params?)` | même sans `page` | `Promise<BankTransaction[]>` | Toutes les transactions (pagination auto) |
+    | `get(id)` | `number` | `Promise<BankTransaction>` | Détails d'une transaction |
+    | `unimputed()` | — | `Promise<BankTransaction[]>` | Transactions non imputées |
+    | `labelSuggestions(id)` | `number` | `Promise<LabelSuggestion[]>` | Suggestions de label |
+    | `impute(id, imputations)` | `number, ImputationParams[]` | `Promise<BankTransaction>` | Imputer une transaction |
+
+    **BankTransactionsListParams :**
+
+    | Champ | Type | Défaut | Description |
+    |-------|------|--------|-------------|
+    | `from` | `string` | — | Date de début (YYYY-MM-DD) |
+    | `to` | `string` | — | Date de fin (YYYY-MM-DD) |
+    | `search` | `string` | — | Recherche dans le libellé |
+    | `bank_account` | `number` | — | ID du compte bancaire |
+    | `hide_refused` | `boolean` | `false` | Masquer les refusées |
+    | `amount_type` | `"positive" \| "negative"` | — | Filtrer par type |
+    | `sorts` | `string` | — | Tri (ex: `date:desc`) |
+    | `page` | `number` | `1` | Numéro de page |
+    | `pageSize` | `number` | `100` | Résultats par page |
+
+    **ImputationParams :**
+
+    | Champ | Type | Description |
+    |-------|------|-------------|
+    | `label` | `{ id: number }` | Label comptable |
+    | `amount` | `number` | Montant imputé |
+    | `documents` | `array` | Documents associés |
+    | `accountant_detail_requests` | `array` | Demandes de détails |
   </Accordion>
 
   <Accordion title="ExpenseReports — client.expenseReports">
-    | Méthode | Description |
-    |---------|-------------|
-    | `list(options?)` | Lister les notes de frais |
-    | `get(id)` | Détails d'une note |
-    | `create(data)` | Créer une note |
+    | Méthode | Paramètres | Retour | Description |
+    |---------|-----------|--------|-------------|
+    | `list(sorts?)` | `string` (défaut: `"metadata.date:desc"`) | `Promise<ExpenseReport[]>` | Lister les notes |
+    | `get(id)` | `number` | `Promise<ExpenseReport>` | Détails d'une note |
+    | `create(data)` | `{ name, metadata?: { date? } }` | `Promise<ExpenseReport>` | Créer une note |
   </Accordion>
 
   <Accordion title="Documents — client.documents">
-    | Méthode | Description |
-    |---------|-------------|
-    | `list(options?)` | Lister les documents |
-    | `categories()` | Catégories disponibles |
-    | `upload(file)` | Uploader un document |
-    | `download(id)` | Télécharger |
+    | Méthode | Paramètres | Retour | Description |
+    |---------|-----------|--------|-------------|
+    | `list(params?)` | `{ types?, source?, page?, pageSize? }` | `Promise<Document[]>` | Lister les documents |
+    | `categories()` | — | `Promise<DocumentCategory[]>` | Catégories disponibles |
+    | `upload(file, filename, type?)` | `Uint8Array, string, string?` | `Promise<Document>` | Uploader un document |
+    | `download(id)` | `number` | `Promise<ArrayBuffer>` | Télécharger |
+    | `preview(id)` | `number` | `Promise<unknown>` | Prévisualisation |
+
+    **Filtres `list()` :**
+
+    | Champ | Type | Description |
+    |-------|------|-------------|
+    | `types` | `string` | Type de document (ex: `receipt`) |
+    | `source` | `string` | Source (ex: `accountant`) |
+    | `page` | `number` | Numéro de page (défaut: 1) |
+    | `pageSize` | `number` | Résultats par page (défaut: 25) |
   </Accordion>
 
   <Accordion title="Labels — client.labels">
-    | Méthode | Description |
-    |---------|-------------|
-    | `list()` | Labels personnalisés |
-    | `standard()` | Labels standards (plan comptable) |
-    | `tags()` | Tags |
+    | Méthode | Paramètres | Retour | Description |
+    |---------|-----------|--------|-------------|
+    | `list()` | — | `Promise<Label[]>` | Labels personnalisés |
+    | `standard()` | — | `Promise<Label[]>` | Labels standards (plan comptable) |
+    | `tags()` | — | `Promise<Tag[]>` | Tags avec détails |
   </Accordion>
 
   <Accordion title="Users — client.users">
-    | Méthode | Description |
-    |---------|-------------|
-    | `me()` | Info utilisateur courant |
+    | Méthode | Paramètres | Retour | Description |
+    |---------|-----------|--------|-------------|
+    | `me()` | — | `Promise<User>` | Info utilisateur courant |
+    | `legalInformations()` | — | `Promise<unknown>` | Informations légales |
+    | `settings(companyId)` | `number` | `Promise<unknown>` | Paramètres utilisateur pour une entreprise |
   </Accordion>
 
-  <Accordion title="Companies — client.companies">
-    | Méthode | Description |
-    |---------|-------------|
-    | `list()` | Lister les entreprises |
-    | `get(id)` | Détails d'une entreprise |
+  <Accordion title="Company — client.company">
+    | Méthode | Paramètres | Retour | Description |
+    |---------|-----------|--------|-------------|
+    | `get()` | — | `Promise<Company>` | Détails de l'entreprise active |
+    | `users()` | — | `Promise<unknown>` | Utilisateurs de l'entreprise |
+    | `appConfig()` | — | `Promise<unknown>` | Configuration de l'app |
+    | `accountingPeriod(rangeYear?)` | `number` (défaut: `1`) | `Promise<AccountingPeriod>` | Période comptable en cours |
+    | `tiles(keys)` | `string[]` | `Promise<unknown>` | Tuiles dashboard |
+    | `dashboardBlocks(displayGroup?)` | `string` (défaut: `"monitoring"`) | `Promise<unknown>` | Blocs du dashboard |
   </Accordion>
 </Accordions>
+
+<Callout type="info" title="Pagination automatique">
+  Les méthodes `listAll()` (disponibles sur `invoices` et `bankTransactions`) itèrent automatiquement sur toutes les pages. Pour les autres ressources, la pagination utilise le header HTTP `Range` et retourne toutes les données en une seule requête.
+</Callout>

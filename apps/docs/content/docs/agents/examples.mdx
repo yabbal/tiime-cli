@@ -1,0 +1,252 @@
+---
+title: Exemples de conversations
+description: Exemples de conversations entre un utilisateur et Claude Code avec le skill Tiime
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+Cette page montre des exemples de conversations avec Claude Code lorsque le skill Tiime est installé. Chaque exemple illustre comment l'agent comprend une demande en langage naturel, exécute les commandes appropriées et restitue un résultat clair.
+
+<Callout type="info" title="Exemples fictifs">
+  Tous les noms d'entreprises, clients, montants et données présentés ici sont entièrement fictifs et servent uniquement d'illustration.
+</Callout>
+
+---
+
+## Audit comptable
+
+<div className="rounded-lg border bg-fd-card p-4 space-y-4 text-sm">
+  <div className="flex gap-3">
+    <span className="font-semibold text-fd-primary shrink-0">Vous :</span>
+    <span>Fais un audit de ma compta, je veux savoir ce qu'il reste à faire.</span>
+  </div>
+  <div className="flex gap-3">
+    <span className="font-semibold text-fd-muted-foreground shrink-0">Claude :</span>
+    <div className="space-y-2">
+      <span>Je lance l'audit sur votre entreprise active.</span>
+
+      ```bash title="Commandes exécutées"
+      tiime company get
+      tiime audit --format json
+      ```
+
+      <span>Voici le résumé de votre comptabilité :</span>
+      <span>**Mon Entreprise SAS** (entreprise active)</span>
+      <ul className="list-disc pl-4 space-y-1">
+        <li>**12 transactions non imputées** (total : 3 245,80 €)</li>
+        <li>8 ont des suggestions d'imputation automatique</li>
+        <li>**3 documents manquants** sur des transactions déjà imputées</li>
+      </ul>
+      <span>Les 3 plus gros montants à traiter :</span>
+      <ol className="list-decimal pl-4 space-y-1">
+        <li>**Fournisseur Cloud** — 1 200,00 € (suggestion : "Hébergement")</li>
+        <li>**Logiciel Pro** — 890,50 € (suggestion : "Services informatiques")</li>
+        <li>**Restaurant du Coin** — 85,00 € (suggestion : "Restaurant")</li>
+      </ol>
+      <span>Voulez-vous que j'applique les 8 auto-imputations ?</span>
+    </div>
+  </div>
+  <div className="flex gap-3">
+    <span className="font-semibold text-fd-primary shrink-0">Vous :</span>
+    <span>Oui vas-y, applique tout.</span>
+  </div>
+  <div className="flex gap-3">
+    <span className="font-semibold text-fd-muted-foreground shrink-0">Claude :</span>
+    <div className="space-y-2">
+      ```bash title="Commande exécutée"
+      tiime audit --apply --format json
+      ```
+
+      <span>8 imputations appliquées avec succès. Il reste 4 transactions à traiter manuellement (pas de suggestion disponible). Voulez-vous les voir en détail ?</span>
+    </div>
+  </div>
+</div>
+
+---
+
+## Créer et envoyer une facture
+
+<div className="rounded-lg border bg-fd-card p-4 space-y-4 text-sm">
+  <div className="flex gap-3">
+    <span className="font-semibold text-fd-primary shrink-0">Vous :</span>
+    <span>Crée la facture de mars pour Nextera. 22 jours à 600€/jour en développement.</span>
+  </div>
+  <div className="flex gap-3">
+    <span className="font-semibold text-fd-muted-foreground shrink-0">Claude :</span>
+    <div className="space-y-2">
+      <span>Je cherche le client Nextera et je prévisualise la facture.</span>
+
+      ```bash title="Commandes exécutées"
+      tiime clients search --query "Nextera"
+      tiime invoices create \
+        --client-id 234 \
+        --description "Développement - Mars 2026" \
+        --quantity 22 --unit-price 600 --unit day \
+        --vat normal --dry-run
+      ```
+
+      <span>Voici ce qui serait créé :</span>
+      <ul className="list-disc pl-4 space-y-1">
+        <li>**Client** : Nextera (ID 234)</li>
+        <li>**Description** : Développement - Mars 2026</li>
+        <li>**22 jours × 600 €** = 13 200 € HT</li>
+        <li>**TVA 20%** = 2 640 €</li>
+        <li>**Total TTC** = 15 840 €</li>
+      </ul>
+      <span>Je crée la facture ?</span>
+    </div>
+  </div>
+  <div className="flex gap-3">
+    <span className="font-semibold text-fd-primary shrink-0">Vous :</span>
+    <span>Oui, et envoie-la à compta@nextera.fr.</span>
+  </div>
+  <div className="flex gap-3">
+    <span className="font-semibold text-fd-muted-foreground shrink-0">Claude :</span>
+    <div className="space-y-2">
+      ```bash title="Commandes exécutées"
+      tiime invoices create \
+        --client-id 234 \
+        --description "Développement - Mars 2026" \
+        --quantity 22 --unit-price 600 --unit day \
+        --vat normal
+      tiime invoices send --id 156 --email compta@nextera.fr
+      ```
+
+      <span>Facture **#156** créée et envoyée à compta@nextera.fr.</span>
+    </div>
+  </div>
+</div>
+
+---
+
+## Point financier rapide
+
+<div className="rounded-lg border bg-fd-card p-4 space-y-4 text-sm">
+  <div className="flex gap-3">
+    <span className="font-semibold text-fd-primary shrink-0">Vous :</span>
+    <span>Comment va ma compta ?</span>
+  </div>
+  <div className="flex gap-3">
+    <span className="font-semibold text-fd-muted-foreground shrink-0">Claude :</span>
+    <div className="space-y-2">
+      ```bash title="Commandes exécutées"
+      tiime status
+      tiime bank balance
+      tiime invoices list --status sent --all
+      ```
+
+      <span>**Point financier au 8 mars 2026 :**</span>
+      <ul className="list-disc pl-4 space-y-1">
+        <li>**Solde bancaire** : 24 320,50 € (Compte principal)</li>
+        <li>**Factures envoyées non payées** : 3 factures pour un total de 8 700 €</li>
+        <li>**Factures en brouillon** : 1 facture à finaliser</li>
+        <li>**Transactions à catégoriser** : 5</li>
+        <li>**Clients actifs** : 4</li>
+      </ul>
+      <span>La plus ancienne facture impayée date du 15 janvier (2 900 € pour Dupont & Fils). Voulez-vous que je vous fasse un récap détaillé des impayés ou que je traite les 5 transactions non imputées ?</span>
+    </div>
+  </div>
+</div>
+
+---
+
+## Dupliquer la facture du mois dernier
+
+<div className="rounded-lg border bg-fd-card p-4 space-y-4 text-sm">
+  <div className="flex gap-3">
+    <span className="font-semibold text-fd-primary shrink-0">Vous :</span>
+    <span>Duplique ma dernière facture pour avril, j'ai fait 19 jours ce mois-ci.</span>
+  </div>
+  <div className="flex gap-3">
+    <span className="font-semibold text-fd-muted-foreground shrink-0">Claude :</span>
+    <div className="space-y-2">
+      <span>Je récupère votre dernière facture.</span>
+
+      ```bash title="Commandes exécutées"
+      tiime invoices list --page-size 1
+      tiime invoices duplicate --id 156 --date 2026-04-01 --quantity 19
+      ```
+
+      <span>Facture **#157** créée :</span>
+      <ul className="list-disc pl-4 space-y-1">
+        <li>Copie de la facture #156 (Nextera — Développement)</li>
+        <li>**Date** : 1er avril 2026</li>
+        <li>**19 jours × 600 €** = 11 400 € HT</li>
+      </ul>
+      <span>La facture est en brouillon. Voulez-vous que je l'envoie ?</span>
+    </div>
+  </div>
+</div>
+
+---
+
+## Explorer les transactions bancaires
+
+<div className="rounded-lg border bg-fd-card p-4 space-y-4 text-sm">
+  <div className="flex gap-3">
+    <span className="font-semibold text-fd-primary shrink-0">Vous :</span>
+    <span>Montre-moi mes dépenses de plus de 500€ ce mois-ci.</span>
+  </div>
+  <div className="flex gap-3">
+    <span className="font-semibold text-fd-muted-foreground shrink-0">Claude :</span>
+    <div className="space-y-2">
+      ```bash title="Commande exécutée"
+      tiime bank transactions --from 2026-03-01 --to 2026-03-31 --all
+      ```
+
+      <span>J'ai filtré les transactions négatives supérieures à 500 € :</span>
+
+      | Date | Libellé | Montant |
+      |------|---------|--------:|
+      | 05/03 | Hébergeur Cloud | -1 200,00 € |
+      | 12/03 | Logiciel SaaS | -890,50 € |
+      | 18/03 | Loyer bureau | -750,00 € |
+      | 22/03 | Suite créative | -599,88 € |
+
+      <span>**Total** : -3 440,38 € sur 4 transactions. Les deux premières ne sont pas encore imputées. Voulez-vous que je les catégorise ?</span>
+    </div>
+  </div>
+</div>
+
+---
+
+## Audit multi-entreprises
+
+<div className="rounded-lg border bg-fd-card p-4 space-y-4 text-sm">
+  <div className="flex gap-3">
+    <span className="font-semibold text-fd-primary shrink-0">Vous :</span>
+    <span>Lance un audit sur toutes mes entreprises et impute automatiquement tout ce que tu peux.</span>
+  </div>
+  <div className="flex gap-3">
+    <span className="font-semibold text-fd-muted-foreground shrink-0">Claude :</span>
+    <div className="space-y-2">
+      ```bash title="Commandes exécutées"
+      tiime audit --all-companies --format json
+      tiime audit --all-companies --apply --format json
+      ```
+
+      <span>Audit terminé sur vos 2 entreprises :</span>
+
+      <span>**Mon Entreprise SAS**</span>
+      <ul className="list-disc pl-4 space-y-1">
+        <li>12 transactions non imputées → **8 imputées automatiquement**</li>
+        <li>4 restantes sans suggestion (à traiter manuellement)</li>
+        <li>2 documents manquants</li>
+      </ul>
+
+      <span>**Ma Deuxième Société**</span>
+      <ul className="list-disc pl-4 space-y-1">
+        <li>6 transactions non imputées → **6 imputées automatiquement**</li>
+        <li>0 document manquant</li>
+      </ul>
+
+      <span>**Bilan** : 14 imputations appliquées sur 18 transactions. Il reste 4 transactions à traiter manuellement sur Mon Entreprise SAS et 2 justificatifs à fournir.</span>
+    </div>
+  </div>
+</div>
+
+---
+
+<Callout type="info" title="Ce ne sont que des exemples">
+  Ces conversations sont illustratives. Le skill s'adapte à votre formulation — vous pouvez demander la même chose de dizaines de manières différentes. L'agent comprend le contexte et choisit les commandes appropriées.
+</Callout>
