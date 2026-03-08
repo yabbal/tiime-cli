@@ -1,0 +1,94 @@
+---
+title: Audit
+description: Audit comptable multi-entreprises avec auto-correction
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Tabs, Tab } from "fumadocs-ui/components/tabs";
+
+La commande `audit` analyse les transactions non imputées de vos entreprises et propose des corrections automatiques basées sur les suggestions de Tiime.
+
+## Utilisation
+
+<Tabs items={["Entreprise active", "Multi-entreprises", "Entreprises spécifiques"]}>
+  <Tab value="Entreprise active">
+    ```bash title="Terminal"
+    tiime audit
+    ```
+
+    Audite uniquement l'entreprise actuellement sélectionnée.
+  </Tab>
+  <Tab value="Multi-entreprises">
+    ```bash title="Terminal"
+    tiime audit --all-companies
+    ```
+
+    Audite toutes les entreprises rattachées à votre compte.
+  </Tab>
+  <Tab value="Entreprises spécifiques">
+    ```bash title="Terminal"
+    tiime audit --company 12345
+    tiime audit --company "Mon entreprise"
+    tiime audit --company 12345,67890
+    ```
+
+    Audite une ou plusieurs entreprises spécifiques (par ID ou par nom, séparés par des virgules).
+  </Tab>
+</Tabs>
+
+## Options
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--all-companies` | `boolean` | `false` | Auditer toutes les entreprises du compte |
+| `--company` | `string` | — | ID ou nom d'entreprise (virgules pour plusieurs) |
+| `--apply` | `boolean` | `false` | Appliquer les corrections automatiques |
+| `--format` | `json\|table\|csv` | `json` | Format de sortie |
+
+## Mode prévisualisation vs application
+
+Par défaut, `audit` fonctionne en mode **lecture seule** : il affiche un rapport sans modifier les données.
+
+```bash title="Terminal"
+# Prévisualiser les corrections proposées
+tiime audit --all-companies
+
+# Appliquer les corrections
+tiime audit --all-companies --apply
+```
+
+<Callout type="warning">
+  Le flag `--apply` applique réellement les imputations proposées. Vérifiez toujours le rapport en mode prévisualisation avant d'appliquer.
+</Callout>
+
+## Sortie
+
+```json title="Sortie"
+{
+  "date": "2026-03-08T10:00:00.000Z",
+  "apply_mode": false,
+  "companies": [
+    {
+      "id": 12345,
+      "name": "Mon entreprise",
+      "unimputed_count": 8,
+      "proposed_imputations": 5,
+      "applied": 0
+    }
+  ]
+}
+```
+
+## Exemples
+
+```bash title="Terminal"
+# Audit rapide de toutes les entreprises
+tiime audit --all-companies --format table
+
+# Compter le total de transactions à traiter
+tiime audit --all-companies \
+  | jq '[.companies[].unimputed_count] | add'
+
+# Appliquer les corrections sur une entreprise spécifique
+tiime audit --company 12345 --apply
+```

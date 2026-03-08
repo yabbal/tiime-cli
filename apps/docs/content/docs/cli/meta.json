@@ -1,4 +1,18 @@
 {
   "title": "CLI",
-  "pages": ["index", "auth", "invoices", "quotations", "clients", "bank", "expenses", "documents", "labels"]
+  "pages": [
+    "index",
+    "auth",
+    "invoices",
+    "quotations",
+    "clients",
+    "bank",
+    "expenses",
+    "documents",
+    "labels",
+    "---Outils---",
+    "status",
+    "audit",
+    "open"
+  ]
 }

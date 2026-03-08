@@ -1,6 +1,6 @@
 ---
 title: Documents
-description: Upload, téléchargement et gestion des documents comptables
+description: Upload, téléchargement et gestion des justificatifs comptables
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
@@ -8,28 +8,68 @@ import { Callout } from "fumadocs-ui/components/callout";
 ## Lister
 
 ```bash title="Terminal"
-tiime documents list               # Tous les documents
-tiime documents list --type receipt # Filtrer par type
+tiime documents list
+tiime documents list --type receipt
+tiime documents list --source accountant
+tiime documents list --format table
 ```
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--type` | `string` | — | Filtrer par type (ex: `receipt`) |
+| `--source` | `string` | — | Filtrer par source (ex: `accountant`) |
+| `--page` | `number` | `1` | Numéro de page |
+| `--format` | `json\|table\|csv` | `json` | Format de sortie |
 
 ## Catégories
 
+Liste les catégories de documents disponibles dans votre entreprise.
+
 ```bash title="Terminal"
 tiime documents categories
+tiime documents categories --format table
 ```
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--format` | `json\|table\|csv` | `json` | Format de sortie |
 
 ## Uploader
 
+Envoie un justificatif (facture fournisseur, ticket, reçu) vers Tiime.
+
 ```bash title="Terminal"
-tiime documents upload --file facture.pdf
+tiime documents upload --file facture-fournisseur.pdf
+tiime documents upload --file ticket.jpg --type receipt
 ```
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `--file` | `string` | Chemin vers le fichier à uploader (obligatoire) |
+| `--type` | `string` | Type de document (optionnel) |
+
+<Callout type="info" title="Analyse automatique">
+  Les documents uploadés sont automatiquement analysés par Tiime pour extraire les informations comptables : montant, date, fournisseur, TVA. Cette analyse facilite le rapprochement bancaire.
+</Callout>
 
 ## Télécharger
 
 ```bash title="Terminal"
-tiime documents download --id 123 --output doc.pdf
+tiime documents download --id 123
+tiime documents download --id 123 --output facture-fournisseur.pdf
 ```
 
-<Callout type="info">
-  Les documents sont automatiquement analysés par Tiime pour extraire les informations comptables (montant, date, fournisseur).
-</Callout>
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--id` | `number` | — | ID du document (obligatoire) |
+| `--output` | `string` | `document-{id}` | Chemin du fichier de sortie |
+
+## Exemples avec jq
+
+```bash title="Terminal"
+# Lister les IDs et noms de fichiers
+tiime documents list | jq '.[] | {id, filename: .file_name}'
+
+# Compter les documents par type
+tiime documents list | jq 'group_by(.type) | map({type: .[0].type, count: length})'
+```

@@ -1,0 +1,36 @@
+---
+title: Open
+description: Ouvrir Tiime dans le navigateur
+---
+
+La commande `open` ouvre l'interface web Tiime directement dans votre navigateur par défaut.
+
+## Utilisation
+
+```bash title="Terminal"
+tiime open                  # Page d'accueil Tiime
+tiime open invoices         # Section factures
+tiime open quotations       # Section devis
+tiime open clients          # Section clients
+tiime open bank             # Section banque
+tiime open documents        # Section documents
+tiime open expenses         # Section notes de frais
+```
+
+## Sections disponibles
+
+| Section | URL ouverte |
+|---------|-------------|
+| _(aucune)_ | `https://apps.tiime.fr` |
+| `invoices` | Page des factures |
+| `quotations` | Page des devis |
+| `clients` | Page des clients |
+| `bank` | Page de la banque |
+| `documents` | Page des documents |
+| `expenses` | Page des notes de frais |
+
+```json title="Sortie"
+{
+  "opened": "https://apps.tiime.fr/invoices"
+}
+```

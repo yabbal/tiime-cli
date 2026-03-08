@@ -5,59 +5,84 @@ description: Toutes les commandes CLI disponibles
 
 import { Cards, Card } from "fumadocs-ui/components/card";
 import { Callout } from "fumadocs-ui/components/callout";
-import { KeyRound, Receipt, FileSignature, Users, Landmark, FileText, FolderOpen, Tags } from "lucide-react";
+import { KeyRound, Receipt, FileSignature, Users, Landmark, FileText, FolderOpen, Tags, Activity, ShieldCheck, ExternalLink } from "lucide-react";
 
-Le CLI Tiime offre un ensemble complet de commandes pour gérer votre comptabilité.
+Le CLI Tiime offre un ensemble complet de commandes pour gérer votre comptabilité depuis le terminal. Chaque commande retourne du JSON par défaut, ce qui les rend facilement combinables avec `jq`, des scripts ou des agents IA.
 
 ## Résumé rapide
 
-```bash
-tiime status    # Résumé : soldes, factures en attente, transactions récentes
+```bash title="Terminal"
+tiime status    # Résumé : soldes, factures en attente, transactions non imputées
 ```
 
-## Commandes
+## Commandes principales
 
 <Cards>
   <Card icon={<KeyRound />} title="Authentification" href="/docs/cli/auth">
-    Login, logout, statut et gestion de l'entreprise.
+    Login, logout, statut et gestion de l'entreprise active.
   </Card>
   <Card icon={<Receipt />} title="Factures" href="/docs/cli/invoices">
-    Créer, dupliquer, modifier, envoyer et supprimer.
+    Créer, dupliquer, modifier, envoyer par email et télécharger en PDF.
   </Card>
   <Card icon={<FileSignature />} title="Devis" href="/docs/cli/quotations">
-    Créer, lister, envoyer et télécharger en PDF.
+    Créer, lister, envoyer par email et télécharger en PDF.
   </Card>
   <Card icon={<Users />} title="Clients" href="/docs/cli/clients">
-    Lister, créer et rechercher vos clients.
+    Lister, créer, rechercher et exporter vos clients.
   </Card>
   <Card icon={<Landmark />} title="Banque" href="/docs/cli/bank">
-    Comptes, soldes, transactions et non-imputées.
+    Comptes, soldes, transactions, imputation et auto-imputation.
   </Card>
   <Card icon={<FileText />} title="Notes de frais" href="/docs/cli/expenses">
-    Lister, consulter et créer des notes.
+    Lister, consulter et créer des notes de frais.
   </Card>
   <Card icon={<FolderOpen />} title="Documents" href="/docs/cli/documents">
-    Upload, téléchargement et catégories.
+    Upload, téléchargement et catégories de justificatifs.
   </Card>
   <Card icon={<Tags />} title="Labels & Tags" href="/docs/cli/labels">
-    Labels personnalisés, standards et tags.
+    Labels personnalisés, standards (plan comptable) et tags.
+  </Card>
+</Cards>
+
+## Outils
+
+<Cards>
+  <Card icon={<Activity />} title="Status" href="/docs/cli/status">
+    Tableau de bord rapide de votre entreprise.
+  </Card>
+  <Card icon={<ShieldCheck />} title="Audit" href="/docs/cli/audit">
+    Audit comptable multi-entreprises avec auto-correction.
+  </Card>
+  <Card icon={<ExternalLink />} title="Open" href="/docs/cli/open">
+    Ouvrir Tiime dans le navigateur.
   </Card>
 </Cards>
 
 ## Formats de sortie
 
-Toutes les commandes de listing supportent `--format` :
+Toutes les commandes de listing supportent le flag `--format` :
 
-| Format | Description | Usage |
-|--------|-------------|-------|
-| `json` | JSON structuré (défaut) | Scripts, jq, agents IA |
-| `table` | Tableau ASCII | Lecture humaine |
-| `csv` | Valeurs séparées par des virgules | Export tableur |
+| Format | Description | Usage typique |
+|--------|-------------|---------------|
+| `json` | JSON structuré (défaut) | Scripts, `jq`, agents IA, piping |
+| `table` | Tableau ASCII lisible | Lecture rapide dans le terminal |
+| `csv` | Valeurs séparées par des virgules | Export vers Excel, Google Sheets |
 
-## Outils
-
-```bash
-tiime open                  # Ouvrir Tiime dans le navigateur
-tiime open invoices         # Ouvrir la section factures
-tiime version               # Afficher la version
+```bash title="Terminal"
+tiime invoices list --format json    # Défaut — JSON structuré
+tiime invoices list --format table   # Tableau lisible
+tiime invoices list --format csv     # Export CSV
 ```
+
+## Flag global `--format`
+
+Le flag `--format` est disponible sur toutes les commandes qui retournent des données :
+`list`, `get`, `balance`, `accounts`, `transactions`, `unimputed`, `categories`, `status`, etc.
+
+<Callout type="info" title="Astuce : combiner avec jq">
+  La sortie JSON par défaut se combine parfaitement avec [jq](https://jqlang.github.io/jq/) pour filtrer, transformer et extraire des données.
+
+  ```bash title="Terminal"
+  tiime invoices list --status paid --all | jq '[.[].total_including_taxes] | add'
+  ```
+</Callout>

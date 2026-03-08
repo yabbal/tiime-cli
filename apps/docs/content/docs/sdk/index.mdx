@@ -8,7 +8,9 @@ import { Callout } from "fumadocs-ui/components/callout";
 import { Tabs, Tab } from "fumadocs-ui/components/tabs";
 import { Settings, KeyRound, Database } from "lucide-react";
 
-Le SDK TypeScript permet d'intégrer Tiime directement dans vos applications Node.js.
+Le SDK TypeScript permet d'intégrer Tiime directement dans vos applications Node.js. Il expose les mêmes données que le CLI sous forme d'API programmatique.
+
+## Installation
 
 <Tabs items={["npm", "pnpm"]}>
   <Tab value="npm">
@@ -30,8 +32,13 @@ import { TiimeClient } from "tiime-cli";
 
 const client = new TiimeClient({ companyId: 12345 });
 
+// Factures payées
 const invoices = await client.invoices.list({ status: "paid" });
+
+// Soldes bancaires
 const balances = await client.bankAccounts.balance();
+
+// Info utilisateur
 const me = await client.users.me();
 ```
 
@@ -39,31 +46,41 @@ const me = await client.users.me();
   Le SDK utilise le token stocké par `tiime auth login`. Pas besoin de gérer l'auth manuellement.
 </Callout>
 
+## Prérequis
+
+Avant d'utiliser le SDK, assurez-vous d'être authentifié via le CLI :
+
+```bash title="Terminal"
+tiime auth login
+tiime company use --id 12345
+```
+
 ## Ressources disponibles
 
-| Ressource | Accès | Description |
-|-----------|-------|-------------|
-| Factures | `client.invoices` | CRUD complet + envoi + PDF |
-| Devis | `client.quotations` | CRUD + envoi + PDF |
-| Clients | `client.clients` | CRUD + recherche |
-| Comptes bancaires | `client.bankAccounts` | Liste + soldes |
-| Transactions | `client.bankTransactions` | Liste + pagination auto |
-| Notes de frais | `client.expenseReports` | CRUD |
-| Documents | `client.documents` | Upload + téléchargement |
-| Labels | `client.labels` | Personnalisés + standards + tags |
-| Utilisateurs | `client.users` | Info utilisateur courant |
-| Entreprises | `client.companies` | Liste + détails |
+| Ressource | Accès | Méthodes | Description |
+|-----------|-------|----------|-------------|
+| Factures | `client.invoices` | 8 | CRUD + envoi + PDF + duplication |
+| Devis | `client.quotations` | 5 | CRUD + envoi + PDF |
+| Clients | `client.clients` | 4 | CRUD + recherche |
+| Comptes bancaires | `client.bankAccounts` | 3 | Liste + détails + soldes |
+| Transactions | `client.bankTransactions` | 6 | Liste + pagination auto + imputation |
+| Notes de frais | `client.expenseReports` | 3 | CRUD |
+| Documents | `client.documents` | 5 | Liste + catégories + upload + download |
+| Labels | `client.labels` | 3 | Personnalisés + standards + tags |
+| Utilisateurs | `client.users` | 3 | Profil + infos légales + settings |
+| Entreprise | `client.company` | 4 | Détails + config + dashboard |
+| Entreprises | `client.listCompanies()` | 1 | Liste des entreprises du compte |
 
 ## En savoir plus
 
 <Cards>
   <Card icon={<Settings />} title="TiimeClient" href="/docs/sdk/client">
-    Initialisation et exemples d'utilisation détaillés.
+    Initialisation, options et exemples d'utilisation détaillés.
   </Card>
   <Card icon={<KeyRound />} title="Authentification" href="/docs/sdk/auth">
-    Gestion des tokens et configuration.
+    Gestion des tokens, stockage et résilience.
   </Card>
   <Card icon={<Database />} title="Ressources API" href="/docs/sdk/resources">
-    Référence complète de chaque ressource.
+    Référence complète de chaque ressource avec paramètres et types.
   </Card>
 </Cards>

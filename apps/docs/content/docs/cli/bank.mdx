@@ -1,34 +1,127 @@
 ---
 title: Banque
-description: Comptes bancaires, soldes et transactions
+description: Comptes, soldes, transactions, imputation et auto-imputation
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
+import { Tabs, Tab } from "fumadocs-ui/components/tabs";
 
-## Comptes et soldes
+## Comptes bancaires
 
 ```bash title="Terminal"
-tiime bank accounts                # Lister les comptes bancaires
-tiime bank balance                 # Soldes de tous les comptes
-tiime bank balance --format table  # Affichage tableau
+tiime bank accounts                   # Lister les comptes actifs
+tiime bank accounts --format table
+```
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--enabled` | `boolean` | `true` | Afficher uniquement les comptes actifs |
+| `--format` | `json\|table\|csv` | `json` | Format de sortie |
+
+## Soldes
+
+```bash title="Terminal"
+tiime bank balance
+tiime bank balance --format table
+```
+
+Affiche le solde actuel de chaque compte bancaire connecté.
+
+```json title="Sortie"
+[
+  { "name": "Compte courant", "balance_amount": 12450.30, "balance_currency": "EUR" },
+  { "name": "Compte épargne", "balance_amount": 5000.00, "balance_currency": "EUR" }
+]
 ```
 
 ## Transactions
 
 ```bash title="Terminal"
-tiime bank transactions                                    # Dernières transactions
-tiime bank transactions --from 2026-01-01 --to 2026-01-31 # Par période
-tiime bank transactions --search "loyer" --all             # Recherche
+tiime bank transactions
+tiime bank transactions --from 2026-01-01 --to 2026-01-31
+tiime bank transactions --search "loyer" --all
+tiime bank transactions --bank-account 789 --all --format csv
 ```
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--from` | `string` | — | Date de début (YYYY-MM-DD) |
+| `--to` | `string` | — | Date de fin (YYYY-MM-DD) |
+| `--search` | `string` | — | Recherche dans le libellé |
+| `--bank-account` | `number` | — | ID du compte bancaire |
+| `--hide-refused` | `boolean` | `false` | Masquer les transactions refusées |
+| `--sort` | `string` | `date:desc` | Tri (ex: `date:asc`, `amount:desc`) |
+| `--page` | `number` | `1` | Numéro de page |
+| `--page-size` | `number` | `100` | Nombre de résultats par page |
+| `--all` | `boolean` | `false` | Récupérer toutes les pages |
+| `--format` | `json\|table\|csv` | `json` | Format de sortie |
+
+<Callout type="info">
+  Sans `--all`, seule la première page est retournée (100 transactions par défaut). Utilisez `--all` pour récupérer l'historique complet.
+</Callout>
 
 ## Transactions non imputées
 
 ```bash title="Terminal"
 tiime bank unimputed
+tiime bank unimputed --format table
 ```
 
+Les transactions non imputées sont celles qui n'ont pas encore été catégorisées comptablement. Elles apparaissent dans le suivi comptable Tiime comme "à traiter".
+
+## Imputer une transaction
+
+Attribue un label comptable à une transaction bancaire.
+
+```bash title="Terminal"
+tiime bank impute --id 317543840 --label-id 3901280
+tiime bank impute --id 317543840 --label-id 3901280 --dry-run
+```
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--id` | `number` | — | ID de la transaction (obligatoire) |
+| `--label-id` | `number` | — | ID du label comptable (obligatoire) |
+| `--label-name` | `string` | — | Nom du label (affichage uniquement) |
+| `--dry-run` | `boolean` | `false` | Prévisualiser sans imputer |
+| `--format` | `json\|table\|csv` | `json` | Format de sortie |
+
 <Callout type="info">
-  Les transactions non imputées sont celles qui n'ont pas encore été catégorisées comptablement.
+  Pour trouver l'ID du label à utiliser, combinez `tiime labels list` et `tiime labels standard`.
+</Callout>
+
+## Auto-imputation
+
+Analyse les transactions non imputées et propose automatiquement des imputations basées sur les suggestions de Tiime.
+
+<Tabs items={["Prévisualisation", "Application"]}>
+  <Tab value="Prévisualisation">
+    ```bash title="Terminal"
+    tiime bank auto-impute
+    tiime bank auto-impute --dry-run
+    ```
+
+    Par défaut, `auto-impute` fonctionne en mode **dry-run** : il affiche les imputations proposées sans les appliquer.
+  </Tab>
+  <Tab value="Application">
+    ```bash title="Terminal"
+    tiime bank auto-impute --apply
+    ```
+
+    Le flag `--apply` applique réellement les imputations proposées.
+  </Tab>
+</Tabs>
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--dry-run` | `boolean` | `true` | Mode prévisualisation (défaut) |
+| `--apply` | `boolean` | `false` | Appliquer les imputations |
+| `--all-companies` | `boolean` | `false` | Traiter toutes les entreprises du compte |
+| `--company` | `string` | — | ID ou nom d'entreprise (séparés par virgules pour plusieurs) |
+| `--format` | `json\|table\|csv` | `json` | Format de sortie |
+
+<Callout type="warning">
+  L'auto-imputation utilise les suggestions de Tiime. Vérifiez toujours les propositions en mode `--dry-run` avant d'appliquer avec `--apply`.
 </Callout>
 
 ## Exemples avec jq
@@ -37,16 +130,23 @@ tiime bank unimputed
 # Solde du premier compte
 tiime bank balance | jq '.[0].balance_amount'
 
-# Transactions > 1000 €
+# Total des soldes
+tiime bank balance | jq '[.[].balance_amount] | add'
+
+# Transactions supérieures à 1000 €
 tiime bank transactions --all | jq '[.[] | select(.amount > 1000)]'
 
-# Résumé dépenses/revenus du mois
+# Résumé dépenses / revenus du mois
 tiime bank transactions --from 2026-01-01 --to 2026-01-31 --all \
-  | jq 'group_by(.amount > 0) | {
-    depenses: .[0] | length,
-    revenus: .[1] | length
+  | jq '{
+    depenses: [.[] | select(.amount < 0) | .amount] | add,
+    revenus: [.[] | select(.amount > 0) | .amount] | add
   }'
 
-# Export CSV des transactions
-tiime bank transactions --all --format csv > transactions.csv
+# Export CSV complet
+tiime bank transactions --all --format csv > transactions-2026.csv
+
+# Top 10 des plus grosses dépenses
+tiime bank transactions --all \
+  | jq '[.[] | select(.amount < 0)] | sort_by(.amount) | .[0:10]'
 ```

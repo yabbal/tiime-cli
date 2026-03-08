@@ -1,0 +1,107 @@
+---
+title: Le Skill Tiime
+description: Structure du fichier SKILL.md et intégration avec les agents IA
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Tabs, Tab } from "fumadocs-ui/components/tabs";
+import { Steps, Step } from "fumadocs-ui/components/steps";
+
+## Qu'est-ce qu'un skill ?
+
+Un skill est un fichier Markdown structuré qui enseigne à un agent IA comment utiliser un outil. Pour Tiime CLI, le fichier `SKILL.md` à la racine du repo contient toutes les instructions nécessaires pour qu'un agent puisse :
+
+- Comprendre quand utiliser Tiime CLI (triggers)
+- Connaître la syntaxe de chaque commande
+- Suivre des workflows comptables complets
+- Interpréter les sorties JSON
+
+## Installation
+
+<Tabs items={["skills.sh", "Manuel"]}>
+  <Tab value="skills.sh">
+    ```bash title="Terminal"
+    npx skills add yabbal/tiime
+    ```
+
+    Le skill est automatiquement téléchargé et enregistré dans votre configuration d'agent.
+  </Tab>
+  <Tab value="Manuel">
+    Copiez le fichier `SKILL.md` depuis le repo dans votre répertoire de skills :
+
+    ```bash title="Terminal"
+    curl -o ~/.claude/skills/tiime.md \
+      https://raw.githubusercontent.com/yabbal/tiime-cli/main/SKILL.md
+    ```
+  </Tab>
+</Tabs>
+
+## Structure du SKILL.md
+
+Le fichier suit un format standardisé compatible avec [skills.sh](https://skills.sh) :
+
+### Frontmatter YAML
+
+```yaml title="SKILL.md"
+---
+name: tiime
+description: CLI pour interagir avec l'application de comptabilite Tiime
+---
+```
+
+| Champ | Description |
+|-------|-------------|
+| `name` | Identifiant unique du skill |
+| `description` | Description courte affichée dans la liste des skills |
+| `disable-model-invocation` | Si `true`, seul l'utilisateur peut invoquer le skill (pas l'agent) |
+| `user-invocable` | Si `false`, seul l'agent peut utiliser le skill (pas `/tiime`) |
+
+### Triggers automatiques
+
+L'agent active le skill quand il détecte ces mots-clés dans la conversation :
+
+| Catégorie | Mots-clés |
+|-----------|-----------|
+| Général | `tiime`, `comptabilite`, `compta` |
+| Factures | `factures`, `facture`, `invoices` |
+| Banque | `banque`, `transactions bancaires`, `solde`, `balance` |
+| Clients | `clients tiime` |
+| Documents | `documents comptables`, `justificatifs` |
+| Autres | `notes de frais`, `devis`, `audit comptable` |
+
+### Contenu
+
+Le corps du skill contient :
+
+1. **Prérequis** — Installation et authentification
+2. **Commandes disponibles** — Syntaxe complète de chaque commande, organisée par catégorie
+3. **Formats de sortie** — JSON, table, CSV
+4. **Exemples jq** — Pipelines de traitement des données
+5. **Workflows typiques** — Scénarios complets étape par étape
+
+## Modes d'invocation
+
+| Mode | Déclencheur | Cas d'usage |
+|------|-------------|-------------|
+| **Automatique** | L'agent détecte un mot-clé trigger | Usage courant — l'agent utilise le skill quand c'est pertinent |
+| **Manuel** | L'utilisateur tape `/tiime` | Forcer l'activation du skill |
+
+<Callout type="info">
+  Par défaut, le skill est invocable à la fois par l'agent (automatiquement) et par l'utilisateur (manuellement via `/tiime`). Ce comportement peut être modifié via les options du frontmatter.
+</Callout>
+
+## Compatibilité
+
+Le skill Tiime est compatible avec tout agent IA qui supporte le format skills.sh :
+
+- **Claude Code** (Anthropic) — support natif
+- Tout agent supportant les fichiers Markdown comme contexte
+
+## Maintenir le skill à jour
+
+Le fichier `SKILL.md` vit à la racine du repo et évolue avec le CLI. Quand de nouvelles commandes sont ajoutées, le skill est mis à jour dans le même commit pour rester synchronisé.
+
+```bash title="Terminal"
+# Mettre à jour le skill installé
+npx skills add yabbal/tiime
+```

@@ -1,6 +1,6 @@
 ---
 title: Authentification
-description: Login, logout, statut et gestion de l'entreprise
+description: Login, logout, statut et gestion de l'entreprise active
 ---
 
 import { Tabs, Tab } from "fumadocs-ui/components/tabs";
@@ -8,20 +8,43 @@ import { Callout } from "fumadocs-ui/components/callout";
 
 ## Login
 
+Connectez-vous à votre compte Tiime pour obtenir un token d'authentification.
+
 <Tabs items={["Interactif", "Script / CI"]}>
   <Tab value="Interactif">
     ```bash title="Terminal"
     tiime auth login
     ```
+
+    Le CLI vous demandera votre email et mot de passe de manière interactive.
   </Tab>
   <Tab value="Script / CI">
     ```bash title="Terminal"
     tiime auth login --email vous@example.com --password votre-mot-de-passe
     ```
+
+    Utile pour les scripts automatisés ou les environnements CI.
   </Tab>
 </Tabs>
 
+| Option | Type | Description |
+|--------|------|-------------|
+| `--email` | `string` | Adresse email du compte Tiime |
+| `--password` | `string` | Mot de passe du compte |
+
+Sortie en cas de succès :
+
+```json title="Sortie"
+{
+  "status": "authenticated",
+  "email": "vous@example.com",
+  "expires_at": "2026-03-09T10:00:00.000Z"
+}
+```
+
 ## Logout
+
+Supprime le token d'authentification stocké localement.
 
 ```bash title="Terminal"
 tiime auth logout
@@ -29,21 +52,76 @@ tiime auth logout
 
 ## Statut
 
+Vérifie si vous êtes connecté et affiche les détails du token.
+
 ```bash title="Terminal"
 tiime auth status
 ```
 
-<Callout type="info" title="Stockage du token">
-  Le token est stocké dans `~/.config/tiime/auth.json` et rafraîchi automatiquement à expiration.
-</Callout>
+```json title="Sortie"
+{
+  "authenticated": true,
+  "email": "vous@example.com",
+  "expires_at": "2026-03-09T10:00:00.000Z"
+}
+```
 
 ## Gestion de l'entreprise
 
+Si votre compte est rattaché à plusieurs entreprises, vous devez sélectionner celle sur laquelle travailler.
+
+### Lister les entreprises
+
 ```bash title="Terminal"
-tiime company list             # Lister les entreprises
-tiime company get              # Détails de l'entreprise active
-tiime company use --id 12345   # Changer d'entreprise
-tiime company me               # Info utilisateur courant
+tiime company list
+tiime company list --format table
 ```
 
-La configuration de l'entreprise active est stockée dans `~/.config/tiime/config.json`.
+| Option | Type | Description |
+|--------|------|-------------|
+| `--format` | `json\|table\|csv` | Format de sortie (défaut : `json`) |
+
+### Détails de l'entreprise active
+
+```bash title="Terminal"
+tiime company get
+```
+
+Affiche les détails complets de l'entreprise actuellement sélectionnée : nom, forme juridique, SIRET, adresse, régime TVA, etc.
+
+### Changer d'entreprise
+
+```bash title="Terminal"
+tiime company use --id 12345
+```
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `--id` | `string` | ID de l'entreprise à activer (obligatoire) |
+
+```json title="Sortie"
+{
+  "status": "ok",
+  "companyId": 12345
+}
+```
+
+### Info utilisateur
+
+```bash title="Terminal"
+tiime company me
+```
+
+Affiche les informations de l'utilisateur connecté, y compris l'entreprise active.
+
+## Stockage
+
+<Callout type="info" title="Fichiers de configuration">
+  | Fichier | Contenu |
+  |---------|---------|
+  | `~/.config/tiime/auth.json` | Token d'authentification (access + refresh) |
+  | `~/.config/tiime/config.json` | Configuration locale (entreprise active) |
+  | `~/.config/tiime/credentials.json` | Identifiants (fallback si Keychain indisponible) |
+
+  Sur macOS, les credentials sont stockés de préférence dans le **Keychain** système.
+</Callout>

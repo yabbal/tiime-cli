@@ -1,4 +1,5 @@
 import { RootProvider } from "fumadocs-ui/provider/next";
+import SearchDialog from "@/components/search";
 import "./global.css";
 import type { ReactNode } from "react";
 
@@ -15,7 +16,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 	return (
 		<html lang="fr" suppressHydrationWarning>
 			<body className="flex flex-col min-h-screen">
-				<RootProvider>{children}</RootProvider>
+				<RootProvider search={{ SearchDialog }}>
+					{children}
+				</RootProvider>
 			</body>
 		</html>
 	);

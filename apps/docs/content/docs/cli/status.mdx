@@ -1,0 +1,64 @@
+---
+title: Status
+description: Tableau de bord rapide de votre entreprise
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+La commande `status` affiche un résumé instantané de l'état de votre entreprise : soldes bancaires, factures en attente, devis en cours et transactions non imputées.
+
+## Utilisation
+
+```bash title="Terminal"
+tiime status
+tiime status --format table
+```
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--format` | `json\|table\|csv` | `json` | Format de sortie |
+
+## Sortie
+
+```json title="Sortie"
+{
+  "company_id": 12345,
+  "bank_accounts": [
+    { "name": "Compte courant", "balance": 12450.30, "currency": "EUR" }
+  ],
+  "invoices": {
+    "drafts": 2,
+    "unpaid": 3
+  },
+  "pending_quotations": 1,
+  "total_clients": 15,
+  "unimputed_transactions": 8
+}
+```
+
+| Champ | Description |
+|-------|-------------|
+| `company_id` | ID de l'entreprise active |
+| `bank_accounts` | Solde de chaque compte bancaire connecté |
+| `invoices.drafts` | Nombre de factures en brouillon |
+| `invoices.unpaid` | Nombre de factures envoyées mais non payées |
+| `pending_quotations` | Nombre de devis en attente de réponse |
+| `total_clients` | Nombre total de clients actifs |
+| `unimputed_transactions` | Transactions bancaires à catégoriser |
+
+<Callout type="info">
+  C'est la commande idéale pour un check rapide quotidien ou pour alimenter un dashboard personnalisé.
+</Callout>
+
+## Exemples
+
+```bash title="Terminal"
+# Vérifier s'il y a des transactions à traiter
+tiime status | jq '.unimputed_transactions'
+
+# Solde total de tous les comptes
+tiime status | jq '[.bank_accounts[].balance] | add'
+
+# Alerter si des factures sont impayées
+tiime status | jq 'if .invoices.unpaid > 0 then "⚠ \(.invoices.unpaid) factures impayées" else "✓ Tout est à jour" end'
+```

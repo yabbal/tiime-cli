@@ -1,31 +1,44 @@
 ---
 title: Factures
-description: Créer, lister, modifier, dupliquer et envoyer des factures
+description: Créer, lister, modifier, dupliquer, envoyer et supprimer des factures
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
 import { Tabs, Tab } from "fumadocs-ui/components/tabs";
 
-## Lister les factures
+## Lister
 
 ```bash title="Terminal"
 tiime invoices list
-tiime invoices list --status paid
-tiime invoices list --sort invoice_number:asc
-tiime invoices list --all           # Toutes les pages
-tiime invoices list --format table  # Affichage tableau
+tiime invoices list --status paid --all
+tiime invoices list --sort invoice_number:asc --format table
 ```
 
-## Consulter une facture
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--status` | `string` | — | Filtrer par statut : `draft`, `saved`, `sent`, `paid` |
+| `--sort` | `string` | `invoice_number:desc` | Tri (ex: `invoice_number:asc`, `emission_date:desc`) |
+| `--page` | `number` | `1` | Numéro de page |
+| `--page-size` | `number` | `25` | Nombre de résultats par page |
+| `--all` | `boolean` | `false` | Récupérer toutes les pages automatiquement |
+| `--format` | `json\|table\|csv` | `json` | Format de sortie |
+
+<Callout type="info">
+  Le flag `--all` itère automatiquement sur toutes les pages. Sans ce flag, seule la première page est retournée.
+</Callout>
+
+## Consulter
 
 ```bash title="Terminal"
 tiime invoices get --id 42
 ```
 
+Retourne tous les détails de la facture : client, lignes, montants HT/TTC, statut, dates, numéro, etc.
+
 ## Créer
 
-<Tabs items={["Simple", "Multi-lignes", "Dry run"]}>
-  <Tab value="Simple">
+<Tabs items={["Ligne simple", "Multi-lignes", "Dry run"]}>
+  <Tab value="Ligne simple">
     ```bash title="Terminal"
     tiime invoices create \
       --client-id 100 \
@@ -41,8 +54,8 @@ tiime invoices get --id 42
     tiime invoices create \
       --client-id 100 \
       --lines '[
-        {"description":"Dev","quantity":20,"unit_price":540,"unit":"day"},
-        {"description":"Design","quantity":5,"unit_price":450,"unit":"day"}
+        {"description":"Développement","quantity":20,"unit_price":540,"unit":"day"},
+        {"description":"Design UX","quantity":5,"unit_price":450,"unit":"day"}
       ]'
     ```
   </Tab>
@@ -50,35 +63,75 @@ tiime invoices get --id 42
     ```bash title="Terminal"
     tiime invoices create \
       --client-id 100 \
-      --description "Test" \
+      --description "Test de facture" \
       --unit-price 500 \
       --dry-run
     ```
 
-    <Callout type="info">
-      Le flag `--dry-run` prévisualise la facture sans la créer.
-    </Callout>
+    Prévisualise la facture qui serait créée sans l'enregistrer.
   </Tab>
 </Tabs>
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--client-id` | `number` | — | ID du client existant |
+| `--client-name` | `string` | — | Nom du client (si pas de `--client-id`) |
+| `--description` | `string` | — | Description de la ligne (mode simple) |
+| `--unit-price` | `number` | — | Prix unitaire HT (mode simple) |
+| `--quantity` | `number` | `1` | Quantité |
+| `--unit` | `string` | — | Unité : `day`, `hour`, `unit`, `package`, `word`, `character`, `page` |
+| `--vat` | `string` | `normal` | TVA : `normal` (20%), `reduced` (10%), `super_reduced` (5.5%), `none` (0%) |
+| `--date` | `string` | aujourd'hui | Date d'émission (YYYY-MM-DD) |
+| `--title` | `string` | — | Titre de la facture |
+| `--free-field` | `string` | — | Champ libre (référence contrat, bon de commande, etc.) |
+| `--lines` | `JSON` | — | Lignes multiples au format JSON (mode multi-lignes) |
+| `--status` | `string` | `draft` | Statut initial : `draft` ou `saved` |
+| `--dry-run` | `boolean` | `false` | Prévisualiser sans créer |
 
 ## Modifier
 
 ```bash title="Terminal"
 tiime invoices update --id 42 --title "Nouveau titre"
+tiime invoices update --id 42 --status saved --date 2026-04-01
+tiime invoices update --id 42 --free-field "Réf: CMD-2026-042"
 ```
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `--id` | `number` | ID de la facture (obligatoire) |
+| `--title` | `string` | Nouveau titre |
+| `--status` | `string` | Nouveau statut (`draft`, `saved`) |
+| `--date` | `string` | Nouvelle date d'émission (YYYY-MM-DD) |
+| `--free-field` | `string` | Nouveau champ libre |
 
 ## Dupliquer
 
+Crée une copie d'une facture existante. Utile pour la facturation récurrente.
+
 ```bash title="Terminal"
 tiime invoices duplicate --id 42
-tiime invoices duplicate --id 42 --date 2026-03-01 --quantity 18
+tiime invoices duplicate --id 42 --date 2026-04-01 --quantity 18
 ```
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--id` | `number` | — | ID de la facture à dupliquer (obligatoire) |
+| `--date` | `string` | aujourd'hui | Date d'émission de la copie |
+| `--quantity` | `number` | — | Remplacer la quantité de toutes les lignes |
 
 ## Envoyer par email
 
 ```bash title="Terminal"
 tiime invoices send --id 42 --email client@example.com
+tiime invoices send --id 42 --email client@example.com --subject "Facture mars"
 ```
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `--id` | `number` | ID de la facture (obligatoire) |
+| `--email` | `string` | Adresse email du destinataire (obligatoire) |
+| `--subject` | `string` | Objet personnalisé de l'email |
+| `--message` | `string` | Corps personnalisé de l'email |
 
 ## Télécharger le PDF
 
@@ -87,6 +140,11 @@ tiime invoices pdf --id 42
 tiime invoices pdf --id 42 --output ma-facture.pdf
 ```
 
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `--id` | `number` | — | ID de la facture (obligatoire) |
+| `--output` | `string` | `facture-{id}.pdf` | Chemin du fichier de sortie |
+
 ## Supprimer
 
 ```bash title="Terminal"
@@ -94,10 +152,10 @@ tiime invoices delete --id 42
 ```
 
 <Callout type="warning">
-  Seuls les brouillons peuvent être supprimés. Les factures envoyées ou payées ne sont pas supprimables.
+  Seuls les **brouillons** (`draft`) peuvent être supprimés. Les factures envoyées ou payées ne sont pas supprimables.
 </Callout>
 
-## Workflow : facture mensuelle récurrente
+## Exemple : facturation mensuelle récurrente
 
 ```bash title="Terminal"
 # Premier mois : créer la facture de référence
@@ -106,6 +164,10 @@ tiime invoices create \
   --description "Prestation mensuelle - Janvier 2026" \
   --unit-price 540 --quantity 20 --unit day
 
-# Mois suivants : dupliquer en ajustant
+# Mois suivants : dupliquer en ajustant la date et le nombre de jours
 tiime invoices duplicate --id 42 --date 2026-02-01 --quantity 18
+tiime invoices duplicate --id 42 --date 2026-03-01 --quantity 21
+
+# Envoyer au client
+tiime invoices send --id 43 --email client@example.com
 ```

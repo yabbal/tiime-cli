@@ -1,0 +1,211 @@
+---
+title: Workflows agents
+description: Exemples concrets de tâches automatisables par un agent IA
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Steps, Step } from "fumadocs-ui/components/steps";
+import { Accordions, Accordion } from "fumadocs-ui/components/accordion";
+
+Cette page présente des workflows complets que les agents IA peuvent exécuter de manière autonome avec Tiime CLI.
+
+## Audit comptable complet
+
+Le workflow le plus puissant : analyser et corriger la comptabilité sur une ou plusieurs entreprises.
+
+<Steps>
+  <Step>
+    ### Lancer l'audit
+
+    ```bash title="Terminal"
+    tiime audit --all-companies --format json
+    ```
+
+    Le rapport JSON contient par entreprise :
+    - `unimputed_transactions` — transactions non imputées (avec suggestions si disponibles)
+    - `missing_documents` — transactions imputées sans justificatif
+    - `summary` — compteurs et montants totaux
+  </Step>
+
+  <Step>
+    ### Analyser le rapport
+
+    L'agent analyse le JSON pour identifier :
+    - Le nombre de transactions à traiter par entreprise
+    - Les suggestions d'imputation disponibles
+    - Les documents manquants à récupérer
+    - Les montants les plus importants à prioriser
+  </Step>
+
+  <Step>
+    ### Appliquer les auto-imputations
+
+    ```bash title="Terminal"
+    tiime audit --all-companies --apply --format json
+    ```
+
+    Les imputations appliquées sont retournées dans `applied_imputations` de chaque entreprise.
+  </Step>
+
+  <Step>
+    ### Traiter les documents manquants
+
+    L'agent liste les transactions imputées sans justificatif, priorise par montant (les plus gros d'abord), et indique pour chaque document manquant : fournisseur, date, montant.
+  </Step>
+</Steps>
+
+<Callout type="info" title="Invocation naturelle">
+  Ce workflow se déclenche quand vous dites : "fais un audit", "qu'est-ce que je dois faire sur ma compta", "audit comptable", etc.
+</Callout>
+
+## Facturation mensuelle récurrente
+
+Automatiser la création et l'envoi de factures chaque mois.
+
+<Steps>
+  <Step>
+    ### Trouver le client
+
+    ```bash title="Terminal"
+    tiime clients search --query "ACME"
+    ```
+  </Step>
+
+  <Step>
+    ### Prévisualiser la facture
+
+    ```bash title="Terminal"
+    tiime invoices create \
+      --client-id 100 \
+      --description "Prestation mensuelle - Mars 2026" \
+      --quantity 20 --unit-price 540 --unit day \
+      --dry-run
+    ```
+  </Step>
+
+  <Step>
+    ### Créer la facture
+
+    ```bash title="Terminal"
+    tiime invoices create \
+      --client-id 100 \
+      --description "Prestation mensuelle - Mars 2026" \
+      --quantity 20 --unit-price 540 --unit day
+    ```
+  </Step>
+
+  <Step>
+    ### Envoyer au client
+
+    ```bash title="Terminal"
+    tiime invoices send --id 42 --email client@example.com
+    ```
+  </Step>
+</Steps>
+
+Pour les mois suivants, l'agent peut dupliquer la facture :
+
+```bash title="Terminal"
+tiime invoices duplicate --id 42 --date 2026-04-01 --quantity 22
+```
+
+## Résumé financier
+
+Générer un point de situation complet en langage naturel.
+
+```bash title="Terminal"
+# Données collectées par l'agent
+tiime status
+tiime bank balance
+tiime invoices list --status sent --all
+tiime invoices list --status draft --all
+tiime bank unimputed
+```
+
+L'agent combine ces données pour produire un résumé du type :
+
+> **Résumé au 8 mars 2026 :**
+> - Solde bancaire : 12 450,30 €
+> - 3 factures envoyées non payées (total : 8 700 €)
+> - 2 factures en brouillon à finaliser
+> - 8 transactions bancaires à catégoriser
+
+## Rapprochement bancaire
+
+Identifier et traiter les transactions non imputées.
+
+<Steps>
+  <Step>
+    ### Lister les transactions non imputées
+
+    ```bash title="Terminal"
+    tiime bank unimputed
+    ```
+  </Step>
+
+  <Step>
+    ### Analyser chaque transaction
+
+    Pour chaque transaction, l'agent peut consulter les suggestions :
+
+    ```bash title="Terminal"
+    # Via le SDK (si intégré dans un script)
+    # ou via l'audit qui inclut les suggestions
+    tiime audit
+    ```
+  </Step>
+
+  <Step>
+    ### Imputer avec le label approprié
+
+    ```bash title="Terminal"
+    tiime bank impute --id 317543840 --label-id 3901280 --dry-run
+    tiime bank impute --id 317543840 --label-id 3901280
+    ```
+  </Step>
+</Steps>
+
+## Exemples de prompts
+
+Voici des exemples de phrases qui déclenchent les workflows ci-dessus :
+
+<Accordions>
+  <Accordion title="Audit comptable">
+    - "Fais un audit de ma compta"
+    - "Qu'est-ce que je dois faire sur ma comptabilité ?"
+    - "Audit comptable sur toutes mes entreprises"
+    - "Y a-t-il des transactions à traiter ?"
+    - "Impute automatiquement ce que tu peux"
+  </Accordion>
+
+  <Accordion title="Facturation">
+    - "Crée la facture de mars pour ACME"
+    - "Duplique la dernière facture pour le mois prochain"
+    - "Envoie la facture 42 à client@example.com"
+    - "Fais-moi un récap des factures impayées"
+  </Accordion>
+
+  <Accordion title="Résumé financier">
+    - "Comment va ma compta ?"
+    - "Fais-moi un point sur mes finances"
+    - "Quel est mon solde ?"
+    - "Combien de factures sont en attente ?"
+  </Accordion>
+
+  <Accordion title="Banque">
+    - "Montre-moi les transactions du mois"
+    - "Quelles transactions ne sont pas imputées ?"
+    - "Catégorise les transactions bancaires"
+    - "Export CSV de mes transactions 2026"
+  </Accordion>
+</Accordions>
+
+## Bonnes pratiques pour les agents
+
+<Callout type="info" title="Conseils pour les développeurs d'agents">
+  1. **Toujours prévisualiser** — Utiliser `--dry-run` avant de créer ou modifier des données
+  2. **Vérifier le contexte** — S'assurer que l'entreprise active est la bonne (`tiime company get`)
+  3. **Prioriser par montant** — Traiter les plus gros montants en premier lors de l'audit
+  4. **Exploiter le JSON** — Parser les sorties avec `jq` ou directement en TypeScript via le SDK
+  5. **Combiner les commandes** — Enchaîner `status` → `unimputed` → `impute` pour un workflow complet
+</Callout>
