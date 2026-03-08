@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+
+### Minor Changes
+
+- Add `tiime audit` command for multi-company accounting audit with auto-imputation support
+
 ## 1.1.1
 
 ### Patch Changes
