@@ -1,5 +1,11 @@
 # tiime-sdk
 
+## 2.1.0
+
+### Minor Changes
+
+- [`e2e48b2`](https://github.com/yabbal/tiime-cli/commit/e2e48b24a6f90261a972efcbd2166c7793f35740) Thanks [@yabbal](https://github.com/yabbal)! - Make SDK fully standalone: support env vars (TIIME_EMAIL, TIIME_PASSWORD, TIIME_ACCESS_TOKEN, TIIME_COMPANY_ID) and direct options for auth/companyId without requiring the CLI.
+
 ## 2.0.0
 
 ### Major Changes
