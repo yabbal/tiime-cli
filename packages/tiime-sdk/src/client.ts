@@ -1,6 +1,6 @@
-import { type $Fetch, ofetch } from "ofetch";
 import { resolveCompanyId, TokenManager } from "./auth";
 import { TiimeError } from "./errors";
+import { createFetch, type FetchFn } from "./fetch";
 import { BankAccountsResource } from "./resources/bank-accounts";
 import { BankTransactionsResource } from "./resources/bank-transactions";
 import { ClientsResource } from "./resources/clients";
@@ -16,7 +16,7 @@ import type { Company, TiimeClientOptions } from "./types";
 const BASE_URL = "https://chronos-api.tiime-apps.com/v1";
 
 export class TiimeClient {
-	readonly fetch: $Fetch;
+	readonly fetch: FetchFn;
 	readonly tokenManager: TokenManager;
 	readonly companyId: number;
 
@@ -32,7 +32,7 @@ export class TiimeClient {
 				password: options.password,
 			});
 
-		this.fetch = ofetch.create({
+		this.fetch = createFetch({
 			baseURL: BASE_URL,
 			retry: 2,
 			retryDelay: 500,

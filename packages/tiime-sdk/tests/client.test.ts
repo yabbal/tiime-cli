@@ -2,10 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockFetchInstance = vi.fn();
 
-vi.mock("ofetch", () => ({
-	ofetch: {
-		create: vi.fn(() => mockFetchInstance),
-	},
+vi.mock("../src/fetch", () => ({
+	createFetch: vi.fn(() => mockFetchInstance),
 }));
 
 vi.mock("../src/auth", () => {

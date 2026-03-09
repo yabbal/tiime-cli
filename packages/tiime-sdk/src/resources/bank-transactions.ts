@@ -1,4 +1,4 @@
-import type { $Fetch } from "ofetch";
+import type { FetchFn } from "../fetch";
 import type {
 	BankTransaction,
 	BankTransactionsResponse,
@@ -22,7 +22,7 @@ export interface BankTransactionsListParams {
 
 export class BankTransactionsResource {
 	constructor(
-		private fetch: $Fetch,
+		private fetch: FetchFn,
 		private companyId: number,
 	) {}
 

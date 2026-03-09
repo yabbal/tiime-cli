@@ -1,9 +1,9 @@
-import type { $Fetch } from "ofetch";
+import type { FetchFn } from "../fetch";
 import type { Label, Tag } from "../types";
 
 export class LabelsResource {
 	constructor(
-		private fetch: $Fetch,
+		private fetch: FetchFn,
 		private companyId: number,
 	) {}
 
