@@ -129,7 +129,7 @@ describe("QuotationsResource", () => {
 			);
 		});
 
-		it("should mutate input params with computed fields", async () => {
+		it("should not mutate input params", async () => {
 			mockFetch.mockResolvedValueOnce({});
 			const line = {
 				description: "Dev",
@@ -141,9 +141,9 @@ describe("QuotationsResource", () => {
 
 			await resource.create(params);
 
-			// create() mutates the original line objects
-			expect(line).toHaveProperty("line_amount", 300);
-			expect(line).toHaveProperty("sequence", 1);
+			// create() should NOT mutate the original line objects
+			expect(line).not.toHaveProperty("line_amount");
+			expect(line).not.toHaveProperty("sequence");
 		});
 
 		it("should POST to correct endpoint", async () => {
@@ -171,12 +171,14 @@ describe("QuotationsResource", () => {
 	describe("send()", () => {
 		it("should POST to correct endpoint with body", async () => {
 			mockFetch.mockResolvedValueOnce(undefined);
-			await resource.send(42, { emails: ["a@b.com"] });
+			await resource.send(42, {
+				recipients: [{ email: "a@b.com" }],
+			});
 			expect(mockFetch).toHaveBeenCalledWith(
 				`/companies/${COMPANY_ID}/quotations/42/send`,
 				{
 					method: "POST",
-					body: { emails: ["a@b.com"] },
+					body: { recipients: [{ email: "a@b.com" }] },
 				},
 			);
 		});

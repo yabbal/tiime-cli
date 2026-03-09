@@ -11,11 +11,11 @@ export class CompanyResource {
 		return this.fetch<Company>(`/companies/${this.companyId}`);
 	}
 
-	users() {
+	users(): Promise<unknown> {
 		return this.fetch(`/companies/${this.companyId}/users`);
 	}
 
-	appConfig() {
+	appConfig(): Promise<unknown> {
 		return this.fetch(`/companies/${this.companyId}/app_config`);
 	}
 
@@ -26,13 +26,13 @@ export class CompanyResource {
 		);
 	}
 
-	tiles(keys: string[]) {
+	tiles(keys: string[]): Promise<unknown> {
 		return this.fetch(`/companies/${this.companyId}/tiles`, {
 			query: { keys: keys.join(",") },
 		});
 	}
 
-	dashboardBlocks(displayGroup = "monitoring") {
+	dashboardBlocks(displayGroup = "monitoring"): Promise<unknown> {
 		return this.fetch(`/companies/${this.companyId}/dashboard_blocks`, {
 			query: { sorts: "rank:asc", display_group: displayGroup },
 		});

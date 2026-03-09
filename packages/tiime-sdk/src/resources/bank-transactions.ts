@@ -29,11 +29,12 @@ export class BankTransactionsResource {
 	list(params?: BankTransactionsListParams) {
 		const start = ((params?.page ?? 1) - 1) * (params?.pageSize ?? 100);
 		const end = start + (params?.pageSize ?? 100);
-		const { page: _, pageSize: __, from, to, search, ...query } = params ?? {};
+		const { page: _, pageSize: __, from, to, search, ...rest } = params ?? {};
+		const query: Record<string, unknown> = { ...rest };
 
-		if (from) (query as Record<string, unknown>).transaction_date_start = from;
-		if (to) (query as Record<string, unknown>).transaction_date_end = to;
-		if (search) (query as Record<string, unknown>).wording = search;
+		if (from) query.transaction_date_start = from;
+		if (to) query.transaction_date_end = to;
+		if (search) query.wording = search;
 
 		return this.fetch<BankTransactionsResponse>(
 			`/companies/${this.companyId}/bank_transactions`,

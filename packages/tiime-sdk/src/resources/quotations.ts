@@ -25,7 +25,12 @@ export class QuotationsResource {
 	}
 
 	create(params: QuotationCreateParams) {
-		for (const line of params.lines ?? []) {
+		const body = {
+			...params,
+			lines: params.lines?.map((line) => ({ ...line })),
+		};
+
+		for (const line of body.lines ?? []) {
 			line.line_amount = line.quantity * line.unit_amount;
 			line.sequence ??= 1;
 			line.invoicing_category_type ??= "benefit";
@@ -36,7 +41,7 @@ export class QuotationsResource {
 
 		return this.fetch<Quotation>(`/companies/${this.companyId}/quotations`, {
 			method: "POST",
-			body: params,
+			body,
 		});
 	}
 

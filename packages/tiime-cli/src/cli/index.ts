@@ -15,10 +15,12 @@ import { statusCommand } from "./commands/status";
 import { versionCommand } from "./commands/version";
 import { translateHelp } from "./i18n";
 
+declare const __VERSION__: string;
+
 const main = defineCommand({
 	meta: {
 		name: "tiime",
-		version: "1.0.0",
+		version: __VERSION__,
 		description: "CLI pour la comptabilité Tiime — sortie JSON pour agents IA",
 	},
 	subCommands: {
@@ -44,7 +46,7 @@ const showTranslatedUsage = async (
 	parent?: Parameters<typeof renderUsage>[1],
 ) => {
 	const usage = await renderUsage(cmd, parent);
-	console.log(`${translateHelp(usage)}\n`);
+	console.error(`${translateHelp(usage)}\n`);
 };
 
 runMain(main, { showUsage: showTranslatedUsage });

@@ -8,11 +8,11 @@ export class UsersResource {
 		return this.fetch<User>("/users/me");
 	}
 
-	legalInformations() {
+	legalInformations(): Promise<unknown> {
 		return this.fetch("/users/me/legal_informations");
 	}
 
-	settings(companyId: number) {
+	settings(companyId: number): Promise<unknown> {
 		return this.fetch(`/users/me/companies/${companyId}/settings`);
 	}
 }
