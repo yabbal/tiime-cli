@@ -35,8 +35,8 @@ brew install tiime
 ### Depuis les sources
 
 ```bash
-git clone https://github.com/yabbal/tiime-cli.git
-cd tiime-cli
+git clone https://github.com/yabbal/tiime.git
+cd tiime
 pnpm install
 pnpm build
 pnpm link --global
@@ -355,7 +355,7 @@ const client = new TiimeClient({ companyId: 12345 });
 const invoices = await client.invoices.list({ status: "paid" });
 ```
 
-Voir la [documentation SDK](https://yabbal.github.io/tiime-cli/docs/sdk) pour plus de details.
+Voir la [documentation SDK](https://yabbal.github.io/tiime/docs/sdk) pour plus de details.
 
 ## Variables d'environnement
 

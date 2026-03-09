@@ -15,10 +15,10 @@ export default function Layout({ children }: { children: ReactNode }) {
 				{ text: "Documentation", url: "/docs" },
 				{
 					text: "GitHub",
-					url: "https://github.com/yabbal/tiime-cli",
+					url: "https://github.com/yabbal/tiime",
 				},
 			]}
-			githubUrl="https://github.com/yabbal/tiime-cli"
+			githubUrl="https://github.com/yabbal/tiime"
 		>
 			{children}
 		</HomeLayout>

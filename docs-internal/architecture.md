@@ -1,22 +1,26 @@
 # Architecture — Tiime CLI & SDK
 
-> Généré le 2026-03-07 | Scan level: deep
+> Mis à jour le 2026-03-09 | Scan level: deep
 
 ## Résumé
 
-Tiime CLI est un outil en ligne de commande TypeScript pour interagir avec l'API Tiime (comptabilité, facturation, banque). Le projet expose aussi un SDK TypeScript réutilisable comme package npm.
+Tiime est un monorepo Turborepo composé de deux packages npm :
+- **`tiime-sdk`** — SDK TypeScript autonome pour l'API Tiime
+- **`tiime-cli`** — CLI qui consomme le SDK
+
+Le SDK est utilisable indépendamment du CLI, avec authentification via variables d'environnement ou options explicites.
 
 ## Architecture en couches
 
 ```
 ┌─────────────────────────────────────────────┐
-│                  CLI Layer                   │
+│              CLI Layer (tiime-cli)           │
 │  citty framework, 13 commands, i18n, output │
-│           src/cli/                           │
+│       packages/tiime-cli/src/cli/           │
 ├─────────────────────────────────────────────┤
-│                  SDK Layer                   │
-│  TiimeClient, TokenManager, 10 Resources    │
-│           src/sdk/                           │
+│              SDK Layer (tiime-sdk)           │
+│  TiimeClient, TokenManager, 10 Resources   │
+│       packages/tiime-sdk/src/               │
 ├─────────────────────────────────────────────┤
 │              API Tiime (externe)             │
 │  https://chronos-api.tiime-apps.com/v1/     │
@@ -24,7 +28,7 @@ Tiime CLI est un outil en ligne de commande TypeScript pour interagir avec l'API
 └─────────────────────────────────────────────┘
 ```
 
-**Règle fondamentale :** La CLI consomme le SDK, jamais l'inverse. Le SDK est autonome et peut être utilisé comme library npm indépendante.
+**Règle fondamentale :** La CLI consomme le SDK (`import { TiimeClient } from "tiime-sdk"`), jamais l'inverse. Le SDK est autonome et publié comme package npm indépendant.
 
 ## Stack technologique
 
@@ -32,6 +36,7 @@ Tiime CLI est un outil en ligne de commande TypeScript pour interagir avec l'API
 |-----------|------------|---------|
 | Langage | TypeScript | 5.9.3 |
 | Runtime | Node.js | >=20 |
+| Monorepo | Turborepo | — |
 | CLI Framework | citty | 0.2.1 |
 | HTTP Client | ofetch | 1.5.1 |
 | Prompts | @clack/prompts | 1.1.0 |
@@ -41,7 +46,7 @@ Tiime CLI est un outil en ligne de commande TypeScript pour interagir avec l'API
 | Tests | Vitest | 4.0.18 |
 | Linter | Biome | 2.4.6 |
 
-## Couche SDK (`src/sdk/`)
+## Couche SDK (`packages/tiime-sdk/src/`)
 
 ### TiimeClient (`client.ts`)
 
@@ -52,9 +57,19 @@ Client HTTP principal. Initialise `ofetch` avec :
 - **Retry** : logique de retry intégrée ofetch
 - **Agrégation** : expose les 10 ressources comme propriétés (`.invoices`, `.clients`, etc.)
 
+Options du constructeur (toutes optionnelles) :
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `companyId` | `number` | ID entreprise (résolu via `TIIME_COMPANY_ID` ou config locale) |
+| `email` | `string` | Email du compte (résolu via `TIIME_EMAIL`) |
+| `password` | `string` | Mot de passe (résolu via `TIIME_PASSWORD`) |
+| `tokens` | `AuthTokens` | Tokens d'authentification directe (résolu via `TIIME_ACCESS_TOKEN`) |
+| `tokenManager` | `TokenManager` | Instance custom de TokenManager |
+
 ### TokenManager (`auth.ts`)
 
-Gestion de l'authentification Auth0 :
+Gestion de l'authentification Auth0 avec cascade de résolution :
 
 | Aspect | Détail |
 |--------|--------|
@@ -64,26 +79,26 @@ Gestion de l'authentification Auth0 :
 | Audience | `https://chronos/` |
 | Scope | `openid email` |
 | Expiration | Buffer de 60 secondes avant expiration réelle |
-| Stockage tokens | `~/.config/tiime/auth.json` |
-| Stockage credentials | macOS Keychain (service: `tiime-credentials`) → fallback fichier `~/.config/tiime/credentials.json` (mode 0o600) |
-| JWT parsing | Decode payload pour extraire `tiime/userEmail` |
+| Stockage tokens | `~/.config/tiime/auth.json` (si persist=true) |
+| Stockage credentials | macOS Keychain → fallback fichier (si persist=true) |
 
-**Flux d'authentification :**
+**Cascade d'authentification :**
 ```
-login(email, password)
-  → POST auth0.tiime.fr/oauth/token
-  → Reçoit access_token + expires_in
-  → Calcule expires_at = Date.now() + expires_in * 1000
-  → Sauvegarde token sur disque
-  → Sauvegarde credentials en keychain (ou fichier)
-
-getValidToken()
-  → Vérifie expires_at - 60s > Date.now()
-  → Si expiré : recharge credentials → re-login automatique
-  → Retourne access_token valide
+1. Tokens explicites (options.tokens)
+2. Email/password explicites (options.email + options.password) → deferred login
+3. TIIME_ACCESS_TOKEN (env var)
+4. TIIME_EMAIL + TIIME_PASSWORD (env vars) → deferred login
+5. Fichiers disque (~/.config/tiime/) → CLI compat
 ```
 
-### Ressources API (`src/sdk/resources/`)
+**`resolveCompanyId()` — Cascade :**
+```
+1. Option explicite (companyId)
+2. TIIME_COMPANY_ID (env var)
+3. Fichier config (~/.config/tiime/config.json)
+```
+
+### Ressources API (`packages/tiime-sdk/src/resources/`)
 
 10 classes de ressource, chacune encapsulant un domaine de l'API Tiime :
 
@@ -94,7 +109,7 @@ getValidToken()
 | `clients` | list, get, create, search | Filtre `archived` |
 | `bank-accounts` | list, get, balance | Agrégation soldes |
 | `bank-transactions` | list, listAll, unimputed | Pagination `Range: items=X-Y`, status 206 |
-| `documents` | list, categories, preview, upload, download | Upload FormData, download ArrayBuffer |
+| `documents` | list, categories, preview, upload, download, match | Upload FormData, download ArrayBuffer |
 | `expense-reports` | list, get, create | Tri `metadata.date:desc` |
 | `labels` | list, standard, tags | Expand `tag_detail` |
 | `company` | get, users, appConfig, accountingPeriod, tiles, dashboardBlocks | Config entreprise |
@@ -115,13 +130,14 @@ class TiimeError extends Error {
 
 40+ interfaces TypeScript couvrant tous les modèles de données : `AuthTokens`, `Company`, `User`, `Client`, `BankAccount`, `BankTransaction`, `Invoice`, `Quotation`, `Document`, `ExpenseReport`, `Label`, `Tag`, paramètres de création, réponses paginées.
 
-## Couche CLI (`src/cli/`)
+## Couche CLI (`packages/tiime-cli/src/cli/`)
 
 ### Bootstrap (`index.ts`)
 
 - Framework `citty` avec `defineCommand()` + `runMain()`
 - 13 sous-commandes enregistrées via `subCommands`
 - Help personnalisé avec `showTranslatedUsage()` pour i18n
+- Imports SDK depuis `"tiime-sdk"` (workspace dependency)
 
 ### Commandes (`commands/`)
 
@@ -173,37 +189,35 @@ class TiimeError extends Error {
 | Headers | `tiime-app: tiime`, `tiime-app-version: 4.30.3`, `tiime-app-platform: web` |
 | Pagination | Header `Range: items=0-25`, réponse `Content-Range`, status 206 |
 | Content-Type | Headers Accept custom (`vnd.tiime.*`) |
-| Endpoints | 40+ endpoints documentés dans `docs/api-discovery.md` |
+| Endpoints | 40+ endpoints documentés dans `api-discovery.md` |
 
 ## Build et distribution
 
-### tsup (`tsup.config.ts`)
+### tsup
 
-Génère 2 bundles ESM distincts :
+Chaque package a sa propre config tsup :
 
-| Bundle | Entrée | Sortie | Particularités |
-|--------|--------|--------|----------------|
-| SDK | `src/index.ts` | `dist/index.js` | Avec `.d.ts` declarations |
-| CLI | `src/cli/index.ts` | `dist/cli.js` | Shebang `#!/usr/bin/env node`, `__VERSION__` injecté |
+| Package | Entrée | Sortie | Particularités |
+|---------|--------|--------|----------------|
+| `tiime-sdk` | `src/index.ts` | `dist/index.js` + `dist/index.d.ts` | Bundle ESM avec déclarations TypeScript |
+| `tiime-cli` | `src/cli/index.ts` | `dist/cli.js` | Shebang `#!/usr/bin/env node`, `__VERSION__` injecté |
+
+Turborepo ordonne le build : `tiime-sdk` d'abord (dépendance), puis `tiime-cli`.
 
 ### Distribution
 
 | Canal | Détail |
 |-------|--------|
-| npm | Package `tiime-cli`, `npm install -g tiime-cli` |
+| npm | `tiime-sdk` (SDK) + `tiime-cli` (CLI) |
 | Homebrew | Tap `yabbal/tap/tiime`, formule dans `homebrew/tiime.rb` |
 | Source | Clone + `pnpm install && pnpm build` |
 
 ## Tests
 
 - **Framework** : Vitest avec globals
-- **6 fichiers de test** :
-  - `tests/cli/output.test.ts` — Formatage JSON/table/CSV
-  - `tests/sdk/auth.test.ts` — TokenManager, JWT, expiration
-  - `tests/sdk/bank.test.ts` — Comptes et transactions
-  - `tests/sdk/clients.test.ts` — Ressource clients
-  - `tests/sdk/documents.test.ts` — Ressource documents
-  - `tests/sdk/invoices.test.ts` — Factures (create, duplicate, template merge)
+- **Structure** :
+  - `packages/tiime-sdk/tests/` — Tests SDK (auth, client, resources)
+  - `packages/tiime-cli/tests/` — Tests CLI (output, config, auto-impute, i18n)
 
 ## CI/CD
 
@@ -211,7 +225,7 @@ Génère 2 bundles ESM distincts :
 - **Trigger** : push main, PR vers main
 - **Matrice** : Node 22 et 24
 - **Steps** : install (pnpm) → lint (biome) → build (tsup) → test (vitest) → test CLI binary
-- **Release** : Changesets auto-publish sur push main
+- **Release** : Changesets auto-publish sur push main (trusted publishing OIDC, pas de NPM_TOKEN)
 
 ### homebrew.yml
 - **Trigger** : release published

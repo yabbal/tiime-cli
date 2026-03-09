@@ -125,7 +125,7 @@ try {
 
 ## Documentation
 
-Voir la [documentation complete](https://yabbal.github.io/tiime-cli/docs/sdk).
+Voir la [documentation complete](https://yabbal.github.io/tiime/docs/sdk).
 
 ## Licence
 

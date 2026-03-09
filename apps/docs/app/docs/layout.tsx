@@ -17,7 +17,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 			sidebar={{
 				defaultOpenLevel: 1,
 			}}
-			githubUrl="https://github.com/yabbal/tiime-cli"
+			githubUrl="https://github.com/yabbal/tiime"
 		>
 			{children}
 		</DocsLayout>
