@@ -4,10 +4,10 @@
 
 CLI et SDK TypeScript pour la comptabilité [Tiime](https://www.tiime.fr) — pilotez votre compta depuis le terminal et intégrez Tiime dans vos applications.
 
-[![CI](https://github.com/yabbal/tiime-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/yabbal/tiime-cli/actions/workflows/ci.yml)
+[![CI](https://github.com/yabbal/tiime/actions/workflows/ci.yml/badge.svg)](https://github.com/yabbal/tiime/actions/workflows/ci.yml)
 [![npm tiime-cli](https://img.shields.io/npm/v/tiime-cli?label=tiime-cli)](https://www.npmjs.com/package/tiime-cli)
 [![npm tiime-sdk](https://img.shields.io/npm/v/tiime-sdk?label=tiime-sdk)](https://www.npmjs.com/package/tiime-sdk)
-[![Documentation](https://img.shields.io/badge/docs-tiime--cli-blue)](https://yabbal.github.io/tiime-cli/)
+[![Documentation](https://img.shields.io/badge/docs-tiime--cli-blue)](https://yabbal.github.io/tiime/)
 
 ## Fonctionnalités
 
@@ -105,13 +105,13 @@ npx skills add yabbal/tiime
 
 ## Documentation
 
-Documentation complète : **[yabbal.github.io/tiime-cli](https://yabbal.github.io/tiime-cli/)**
+Documentation complète : **[yabbal.github.io/tiime](https://yabbal.github.io/tiime/)**
 
-- [Premiers pas](https://yabbal.github.io/tiime-cli/docs)
-- [Installation](https://yabbal.github.io/tiime-cli/docs/installation)
-- [Référence CLI](https://yabbal.github.io/tiime-cli/docs/cli)
-- [Référence SDK](https://yabbal.github.io/tiime-cli/docs/sdk)
-- [Agents IA & Skill](https://yabbal.github.io/tiime-cli/docs/agents)
+- [Premiers pas](https://yabbal.github.io/tiime/docs)
+- [Installation](https://yabbal.github.io/tiime/docs/installation)
+- [Référence CLI](https://yabbal.github.io/tiime/docs/cli)
+- [Référence SDK](https://yabbal.github.io/tiime/docs/sdk)
+- [Agents IA & Skill](https://yabbal.github.io/tiime/docs/agents)
 
 ## Structure du monorepo
 
