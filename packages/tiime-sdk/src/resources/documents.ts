@@ -1,4 +1,4 @@
-import type { $Fetch } from "ofetch";
+import type { FetchFn } from "../fetch";
 import type { Document, DocumentCategory, MatchableDocument } from "../types";
 
 export interface DocumentsListParams {
@@ -12,7 +12,7 @@ export interface DocumentsListParams {
 
 export class DocumentsResource {
 	constructor(
-		private fetch: $Fetch,
+		private fetch: FetchFn,
 		private companyId: number,
 	) {}
 

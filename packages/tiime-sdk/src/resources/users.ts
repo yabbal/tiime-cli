@@ -1,8 +1,8 @@
-import type { $Fetch } from "ofetch";
+import type { FetchFn } from "../fetch";
 import type { User } from "../types";
 
 export class UsersResource {
-	constructor(private fetch: $Fetch) {}
+	constructor(private fetch: FetchFn) {}
 
 	me() {
 		return this.fetch<User>("/users/me");

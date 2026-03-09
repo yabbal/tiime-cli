@@ -1,9 +1,9 @@
-import type { $Fetch } from "ofetch";
+import type { FetchFn } from "../fetch";
 import type { BankAccount } from "../types";
 
 export class BankAccountsResource {
 	constructor(
-		private fetch: $Fetch,
+		private fetch: FetchFn,
 		private companyId: number,
 	) {}
 

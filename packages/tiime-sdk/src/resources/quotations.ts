@@ -1,4 +1,4 @@
-import type { $Fetch } from "ofetch";
+import type { FetchFn } from "../fetch";
 import type {
 	Quotation,
 	QuotationCreateParams,
@@ -7,7 +7,7 @@ import type {
 
 export class QuotationsResource {
 	constructor(
-		private fetch: $Fetch,
+		private fetch: FetchFn,
 		private companyId: number,
 	) {}
 

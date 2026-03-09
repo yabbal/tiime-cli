@@ -1,4 +1,4 @@
-import type { $Fetch } from "ofetch";
+import type { FetchFn } from "../fetch";
 import type { Invoice, InvoiceCreateParams, InvoiceSendParams } from "../types";
 
 export interface InvoicesListParams {
@@ -25,7 +25,7 @@ const DEFAULT_INVOICE_TEMPLATE: Partial<InvoiceCreateParams> = {
 
 export class InvoicesResource {
 	constructor(
-		private fetch: $Fetch,
+		private fetch: FetchFn,
 		private companyId: number,
 	) {}
 
