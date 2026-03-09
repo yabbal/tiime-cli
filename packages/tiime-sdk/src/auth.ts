@@ -2,7 +2,7 @@ import { execSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { ofetch } from "ofetch";
+import { fetchJson } from "./fetch";
 import type { AuthTokens } from "./types";
 
 const AUTH0_DOMAIN = "auth0.tiime.fr";
@@ -186,20 +186,21 @@ export class TokenManager {
 	}
 
 	async login(email: string, password: string): Promise<AuthTokens> {
-		const response = await ofetch<{
+		const response = await fetchJson<{
 			access_token: string;
 			expires_in: number;
 			token_type: string;
 		}>(`https://${AUTH0_DOMAIN}/oauth/token`, {
 			method: "POST",
-			body: {
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
 				grant_type: "password",
 				client_id: AUTH0_CLIENT_ID,
 				audience: AUTH0_AUDIENCE,
 				scope: "openid email",
 				username: email,
 				password: password,
-			},
+			}),
 		});
 
 		this.tokens = {

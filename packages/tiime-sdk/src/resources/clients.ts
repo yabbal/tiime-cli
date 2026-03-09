@@ -1,4 +1,4 @@
-import type { $Fetch } from "ofetch";
+import type { FetchFn } from "../fetch";
 import type { Client } from "../types";
 
 export interface ClientsListParams {
@@ -19,7 +19,7 @@ export interface ClientCreateParams {
 
 export class ClientsResource {
 	constructor(
-		private fetch: $Fetch,
+		private fetch: FetchFn,
 		private companyId: number,
 	) {}
 
