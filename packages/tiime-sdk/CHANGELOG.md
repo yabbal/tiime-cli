@@ -1,5 +1,11 @@
 # tiime-sdk
 
+## 2.1.2
+
+### Patch Changes
+
+- [#12](https://github.com/yabbal/tiime/pull/12) [`eed519c`](https://github.com/yabbal/tiime/commit/eed519c8c0f6198c1f2870e9ab3d1a0144e50d98) Thanks [@yabbal](https://github.com/yabbal)! - Fix CLI version display, prevent parameter mutation in create(), improve type safety, and fix French accents in docs
+
 ## 2.1.1
 
 ### Patch Changes
