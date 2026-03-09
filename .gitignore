@@ -6,3 +6,6 @@ api-responses/
 out/
 .source/
 .turbo/
+.env
+.env.local
+.env.*.local

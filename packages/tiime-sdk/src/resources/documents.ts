@@ -46,7 +46,7 @@ export class DocumentsResource {
 		);
 	}
 
-	preview(documentId: number) {
+	preview(documentId: number): Promise<unknown> {
 		return this.fetch(
 			`/companies/${this.companyId}/documents/${documentId}/preview`,
 		);

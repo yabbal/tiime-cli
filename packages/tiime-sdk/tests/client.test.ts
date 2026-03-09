@@ -65,9 +65,7 @@ describe("TiimeClient", () => {
 		});
 
 		it("bankTransactions should return BankTransactionsResource", () => {
-			expect(client.bankTransactions).toBeInstanceOf(
-				BankTransactionsResource,
-			);
+			expect(client.bankTransactions).toBeInstanceOf(BankTransactionsResource);
 		});
 
 		it("documents should return DocumentsResource", () => {

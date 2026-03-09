@@ -24,9 +24,7 @@ describe("CompanyResource", () => {
 		it("should call correct endpoint", async () => {
 			mockFetch.mockResolvedValueOnce([]);
 			await resource.users();
-			expect(mockFetch).toHaveBeenCalledWith(
-				`/companies/${COMPANY_ID}/users`,
-			);
+			expect(mockFetch).toHaveBeenCalledWith(`/companies/${COMPANY_ID}/users`);
 		});
 	});
 
@@ -64,19 +62,17 @@ describe("CompanyResource", () => {
 		it("should join keys with comma", async () => {
 			mockFetch.mockResolvedValueOnce([]);
 			await resource.tiles(["revenue", "expenses"]);
-			expect(mockFetch).toHaveBeenCalledWith(
-				`/companies/${COMPANY_ID}/tiles`,
-				{ query: { keys: "revenue,expenses" } },
-			);
+			expect(mockFetch).toHaveBeenCalledWith(`/companies/${COMPANY_ID}/tiles`, {
+				query: { keys: "revenue,expenses" },
+			});
 		});
 
 		it("should handle empty keys array", async () => {
 			mockFetch.mockResolvedValueOnce([]);
 			await resource.tiles([]);
-			expect(mockFetch).toHaveBeenCalledWith(
-				`/companies/${COMPANY_ID}/tiles`,
-				{ query: { keys: "" } },
-			);
+			expect(mockFetch).toHaveBeenCalledWith(`/companies/${COMPANY_ID}/tiles`, {
+				query: { keys: "" },
+			});
 		});
 	});
 

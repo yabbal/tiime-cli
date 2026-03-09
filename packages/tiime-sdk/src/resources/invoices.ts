@@ -75,7 +75,11 @@ export class InvoicesResource {
 	}
 
 	create(params: InvoiceCreateParams) {
-		const body = { ...DEFAULT_INVOICE_TEMPLATE, ...params };
+		const body = {
+			...DEFAULT_INVOICE_TEMPLATE,
+			...params,
+			lines: params.lines?.map((line) => ({ ...line })),
+		};
 
 		// Compute line amounts and totals
 		for (const line of body.lines ?? []) {
