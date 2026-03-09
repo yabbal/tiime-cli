@@ -1,28 +1,27 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BankAccountsResource } from "../src/resources/bank-accounts";
 import { BankTransactionsResource } from "../src/resources/bank-transactions";
 
 describe("BankAccountsResource", () => {
 	const mockFetch = vi.fn();
-	const resource = new BankAccountsResource(mockFetch as any, 123);
+	const resource = new BankAccountsResource(mockFetch as never, 123);
 
 	beforeEach(() => mockFetch.mockReset());
 
 	it("list() calls correct endpoint with no filter", async () => {
 		mockFetch.mockResolvedValue([]);
 		await resource.list();
-		expect(mockFetch).toHaveBeenCalledWith(
-			"/companies/123/bank_accounts",
-			{ query: undefined },
-		);
+		expect(mockFetch).toHaveBeenCalledWith("/companies/123/bank_accounts", {
+			query: undefined,
+		});
 	});
 
 	it("list(true) passes enabled filter", async () => {
 		mockFetch.mockResolvedValue([]);
 		await resource.list(true);
-		expect(mockFetch).toHaveBeenCalledWith(
-			"/companies/123/bank_accounts",
-			{ query: { enabled: true } },
-		);
+		expect(mockFetch).toHaveBeenCalledWith("/companies/123/bank_accounts", {
+			query: { enabled: true },
+		});
 	});
 
 	it("balance() returns formatted balances from enabled accounts", async () => {
@@ -38,40 +37,34 @@ describe("BankAccountsResource", () => {
 			{ name: "Compte Pro", balance_amount: 1000, currency: "EUR" },
 		]);
 		// balance() should call list(true)
-		expect(mockFetch).toHaveBeenCalledWith(
-			"/companies/123/bank_accounts",
-			{ query: { enabled: true } },
-		);
+		expect(mockFetch).toHaveBeenCalledWith("/companies/123/bank_accounts", {
+			query: { enabled: true },
+		});
 	});
 
 	it("get() calls correct endpoint", async () => {
 		mockFetch.mockResolvedValue({ id: 42 });
 		await resource.get(42);
-		expect(mockFetch).toHaveBeenCalledWith(
-			"/companies/123/bank_accounts/42",
-		);
+		expect(mockFetch).toHaveBeenCalledWith("/companies/123/bank_accounts/42");
 	});
 });
 
 describe("BankTransactionsResource", () => {
 	const mockFetch = vi.fn();
-	const resource = new BankTransactionsResource(mockFetch as any, 123);
+	const resource = new BankTransactionsResource(mockFetch as never, 123);
 
 	beforeEach(() => mockFetch.mockReset());
 
 	it("list() calls correct endpoint with default pagination", async () => {
 		mockFetch.mockResolvedValue({ transactions: [], metadata: {} });
 		await resource.list();
-		expect(mockFetch).toHaveBeenCalledWith(
-			"/companies/123/bank_transactions",
-			{
-				query: { hide_refused: false },
-				headers: {
-					Accept: "application/vnd.tiime.bank_transactions.v2+json",
-					Range: "items=0-100",
-				},
+		expect(mockFetch).toHaveBeenCalledWith("/companies/123/bank_transactions", {
+			query: { hide_refused: false },
+			headers: {
+				Accept: "application/vnd.tiime.bank_transactions.v2+json",
+				Range: "items=0-100",
 			},
-		);
+		});
 	});
 
 	it("list() passes date filters as transaction_date_start/end", async () => {

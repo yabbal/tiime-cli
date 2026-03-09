@@ -1,8 +1,9 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DocumentsResource } from "../src/resources/documents";
 
 describe("DocumentsResource", () => {
 	const mockFetch = vi.fn();
-	const resource = new DocumentsResource(mockFetch as any, 123);
+	const resource = new DocumentsResource(mockFetch as never, 123);
 
 	beforeEach(() => mockFetch.mockReset());
 
@@ -15,7 +16,8 @@ describe("DocumentsResource", () => {
 				expand: "file_family,preview_available",
 			},
 			headers: {
-				Accept: "application/vnd.tiime.documents.v2+json,application/vnd.tiime.docs.query+json,application/vnd.tiime.docs.imputation+json",
+				Accept:
+					"application/vnd.tiime.documents.v2+json,application/vnd.tiime.docs.query+json,application/vnd.tiime.docs.imputation+json",
 				Range: "items=0-25",
 			},
 		});

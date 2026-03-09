@@ -1,8 +1,9 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ClientsResource } from "../src/resources/clients";
 
 describe("ClientsResource", () => {
 	const mockFetch = vi.fn();
-	const resource = new ClientsResource(mockFetch as any, 123);
+	const resource = new ClientsResource(mockFetch as never, 123);
 
 	beforeEach(() => {
 		mockFetch.mockReset();

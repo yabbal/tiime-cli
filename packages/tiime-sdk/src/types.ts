@@ -155,10 +155,10 @@ export interface BankTransaction {
 	status: string;
 	status_code: string;
 	comment: string | null;
-	tags: unknown[];
+	tags: Tag[];
 	short_bank_name: string;
-	beneficiary: unknown | null;
-	merchant: unknown | null;
+	beneficiary: { id: number; name: string } | null;
+	merchant: { id: number; name: string } | null;
 	transfer_label: string | null;
 	imputations: Imputation[];
 	count_documents: number;
@@ -168,7 +168,7 @@ export interface BankTransaction {
 export interface BankTransactionsResponse {
 	metadata: {
 		has_multiple_cardholder: boolean;
-		accountant_detail_request_data: unknown[];
+		accountant_detail_request_data: { id: number }[];
 		total_amount: number;
 	};
 	transactions: BankTransaction[];
@@ -213,7 +213,7 @@ export interface InvoiceCreateParams {
 	title?: string | null;
 	title_enabled?: boolean;
 	lines: InvoiceLine[];
-	text_lines?: unknown[];
+	text_lines?: { text: string }[];
 	status?: "draft" | "saved";
 	template?: string;
 	free_field?: string;
@@ -242,7 +242,7 @@ export interface Invoice {
 	lines: InvoiceLine[];
 	type: string;
 	color: string;
-	tags: unknown[];
+	tags: Tag[];
 	totals_per_vat_type: Record<
 		string,
 		{ total_excluding_taxes: number; vat_amount: number }
@@ -401,7 +401,11 @@ export interface MatchableDocument {
 	mime_type: string;
 	name: string;
 	type: string;
-	metadata: Record<string, unknown>[];
+	metadata: {
+		date?: string | null;
+		amount?: number | null;
+		supplier_name?: string | null;
+	}[];
 	created_at: string;
 	tags: { id: number; name: string; type: string; amount: number }[];
 }

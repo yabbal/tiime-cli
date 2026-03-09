@@ -41,10 +41,9 @@ describe("LabelsResource", () => {
 		it("should call correct endpoint with expand query", async () => {
 			mockFetch.mockResolvedValueOnce([]);
 			await resource.tags();
-			expect(mockFetch).toHaveBeenCalledWith(
-				`/companies/${COMPANY_ID}/tags`,
-				{ query: { expand: "tag_detail" } },
-			);
+			expect(mockFetch).toHaveBeenCalledWith(`/companies/${COMPANY_ID}/tags`, {
+				query: { expand: "tag_detail" },
+			});
 		});
 	});
 });

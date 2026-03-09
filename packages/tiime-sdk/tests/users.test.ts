@@ -22,9 +22,7 @@ describe("UsersResource", () => {
 		it("should call correct endpoint", async () => {
 			mockFetch.mockResolvedValueOnce({});
 			await resource.legalInformations();
-			expect(mockFetch).toHaveBeenCalledWith(
-				"/users/me/legal_informations",
-			);
+			expect(mockFetch).toHaveBeenCalledWith("/users/me/legal_informations");
 		});
 	});
 
