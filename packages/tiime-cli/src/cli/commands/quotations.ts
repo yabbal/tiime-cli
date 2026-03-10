@@ -3,6 +3,7 @@ import { defineCommand } from "citty";
 import type { InvoiceLine, QuotationCreateParams } from "tiime-sdk";
 import { createClient, getCompanyId } from "../config";
 import { formatArg, type OutputFormat, output, outputError } from "../output";
+import { quotationColumns } from "../table-columns";
 
 export const quotationsCommand = defineCommand({
 	meta: { name: "quotations", description: "Gestion des devis" },
@@ -14,7 +15,10 @@ export const quotationsCommand = defineCommand({
 				try {
 					const client = createClient(getCompanyId());
 					const quotations = await client.quotations.list();
-					output(quotations, { format: args.format as OutputFormat });
+					output(quotations, {
+						format: args.format as OutputFormat,
+						columns: quotationColumns,
+					});
 				} catch (e) {
 					outputError(e);
 				}

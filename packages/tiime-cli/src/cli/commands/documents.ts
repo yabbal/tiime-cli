@@ -3,6 +3,7 @@ import { basename } from "node:path";
 import { defineCommand } from "citty";
 import { createClient, getCompanyId } from "../config";
 import { formatArg, type OutputFormat, output, outputError } from "../output";
+import { documentCategoryColumns, documentColumns } from "../table-columns";
 
 export const documentsCommand = defineCommand({
 	meta: { name: "documents", description: "Gestion des documents" },
@@ -29,7 +30,10 @@ export const documentsCommand = defineCommand({
 						source: args.source,
 						page: Number(args.page),
 					});
-					output(docs, { format: args.format as OutputFormat });
+					output(docs, {
+						format: args.format as OutputFormat,
+						columns: documentColumns,
+					});
 				} catch (e) {
 					outputError(e);
 				}
@@ -103,7 +107,10 @@ export const documentsCommand = defineCommand({
 				try {
 					const client = createClient(getCompanyId());
 					const categories = await client.documents.categories();
-					output(categories, { format: args.format as OutputFormat });
+					output(categories, {
+						format: args.format as OutputFormat,
+						columns: documentCategoryColumns,
+					});
 				} catch (e) {
 					outputError(e);
 				}

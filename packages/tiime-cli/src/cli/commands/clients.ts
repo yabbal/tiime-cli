@@ -1,6 +1,7 @@
 import { defineCommand } from "citty";
 import { createClient, getCompanyId } from "../config";
 import { formatArg, type OutputFormat, output, outputError } from "../output";
+import { clientColumns } from "../table-columns";
 
 export const clientsCommand = defineCommand({
 	meta: { name: "clients", description: "Gestion des clients" },
@@ -21,7 +22,10 @@ export const clientsCommand = defineCommand({
 					const clients = await client.clients.list({
 						archived: args.archived,
 					});
-					output(clients, { format: args.format as OutputFormat });
+					output(clients, {
+						format: args.format as OutputFormat,
+						columns: clientColumns,
+					});
 				} catch (e) {
 					outputError(e);
 				}
@@ -116,7 +120,10 @@ export const clientsCommand = defineCommand({
 				try {
 					const client = createClient(getCompanyId());
 					const results = await client.clients.search(args.query);
-					output(results, { format: args.format as OutputFormat });
+					output(results, {
+						format: args.format as OutputFormat,
+						columns: clientColumns,
+					});
 				} catch (e) {
 					outputError(e);
 				}
