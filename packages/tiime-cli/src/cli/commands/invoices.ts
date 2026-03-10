@@ -3,6 +3,7 @@ import { defineCommand } from "citty";
 import type { InvoiceCreateParams, InvoiceLine } from "tiime-sdk";
 import { createClient, getCompanyId } from "../config";
 import { formatArg, type OutputFormat, output, outputError } from "../output";
+import { invoiceColumns } from "../table-columns";
 
 const DEFAULT_INVOICE_TEMPLATE: Partial<InvoiceCreateParams> = {
 	template: "advanced",
@@ -49,7 +50,10 @@ export const invoicesCommand = defineCommand({
 			},
 			async run({ args }) {
 				try {
-					const fmt = { format: args.format as OutputFormat };
+					const fmt = {
+						format: args.format as OutputFormat,
+						columns: invoiceColumns,
+					};
 					const client = createClient(getCompanyId());
 					if (args.all) {
 						const invoices = await client.invoices.listAll({

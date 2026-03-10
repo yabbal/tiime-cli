@@ -12,8 +12,15 @@ export const formatArg = {
 	},
 };
 
+export interface TableColumn {
+	key: string;
+	header?: string;
+	get?: (row: Record<string, unknown>) => unknown;
+}
+
 interface OutputOptions {
 	format?: OutputFormat;
+	columns?: TableColumn[];
 }
 
 const stringifyValue = (value: unknown): string => {
@@ -22,34 +29,80 @@ const stringifyValue = (value: unknown): string => {
 	return String(value);
 };
 
+const displayValue = (value: unknown): string => {
+	if (value === null || value === undefined) return "";
+	if (Array.isArray(value)) {
+		if (value.length === 0) return "";
+		return `(${value.length})`;
+	}
+	if (typeof value === "object" && value !== null) {
+		const obj = value as Record<string, unknown>;
+		if (obj.name !== undefined) return String(obj.name);
+		if (obj.label !== undefined) return String(obj.label);
+		if (obj.code !== undefined) return String(obj.code);
+		if (obj.id !== undefined) return `#${obj.id}`;
+		return JSON.stringify(obj);
+	}
+	return String(value);
+};
+
 const outputJson = (data: unknown): void => {
 	process.stdout.write(`${JSON.stringify(data, null, 2)}\n`);
 };
 
-const outputTable = (data: unknown): void => {
+const unwrapEnvelope = (data: unknown): unknown => {
+	if (typeof data !== "object" || data === null || Array.isArray(data))
+		return data;
+
+	const entries = Object.entries(data as Record<string, unknown>);
+	const arrayEntries = entries.filter(([, v]) => Array.isArray(v));
+	if (arrayEntries.length === 0) return data;
+	// Pick the largest array (e.g. transactions over metadata: [])
+	let best = arrayEntries[0];
+	for (const entry of arrayEntries) {
+		if ((entry[1] as unknown[]).length > (best[1] as unknown[]).length) {
+			best = entry;
+		}
+	}
+	return best[1];
+};
+
+const outputTable = (data: unknown, columns?: TableColumn[]): void => {
+	const resolved = unwrapEnvelope(data);
+
 	if (
-		Array.isArray(data) &&
-		data.length > 0 &&
-		typeof data[0] === "object" &&
-		data[0] !== null
+		Array.isArray(resolved) &&
+		resolved.length > 0 &&
+		typeof resolved[0] === "object" &&
+		resolved[0] !== null
 	) {
-		const keys = Object.keys(data[0] as Record<string, unknown>);
-		const table = new Table({ head: keys });
-		for (const row of data) {
+		const cols: TableColumn[] =
+			columns ??
+			Object.keys(resolved[0] as Record<string, unknown>).map((k) => ({
+				key: k,
+			}));
+		const headers = cols.map((c) => c.header ?? c.key);
+		const table = new Table({ head: headers });
+		for (const row of resolved) {
 			const record = row as Record<string, unknown>;
-			table.push(keys.map((key) => stringifyValue(record[key])));
+			table.push(
+				cols.map((col) => {
+					const val = col.get ? col.get(record) : record[col.key];
+					return displayValue(val);
+				}),
+			);
 		}
 		process.stdout.write(`${table.toString()}\n`);
 	} else if (
-		typeof data === "object" &&
-		data !== null &&
-		!Array.isArray(data)
+		typeof resolved === "object" &&
+		resolved !== null &&
+		!Array.isArray(resolved)
 	) {
 		const table = new Table();
 		for (const [key, value] of Object.entries(
-			data as Record<string, unknown>,
+			resolved as Record<string, unknown>,
 		)) {
-			table.push({ [key]: stringifyValue(value) });
+			table.push({ [key]: displayValue(value) });
 		}
 		process.stdout.write(`${table.toString()}\n`);
 	} else {
@@ -109,7 +162,7 @@ export const output = (data: unknown, options?: OutputOptions): void => {
 
 	switch (format) {
 		case "table":
-			outputTable(data);
+			outputTable(data, options?.columns);
 			break;
 		case "csv":
 			outputCsv(data);

@@ -7,6 +7,7 @@ import type {
 import { autoImputeForCompany, resolveCompanyIds } from "../auto-impute";
 import { createClient, getCompanyId } from "../config";
 import { formatArg, type OutputFormat, output, outputError } from "../output";
+import { bankAccountColumns, transactionColumns } from "../table-columns";
 
 export const bankCommand = defineCommand({
 	meta: { name: "bank", description: "Comptes bancaires et transactions" },
@@ -21,7 +22,10 @@ export const bankCommand = defineCommand({
 				try {
 					const client = createClient(getCompanyId());
 					const balances = await client.bankAccounts.balance();
-					output(balances, { format: args.format as OutputFormat });
+					output(balances, {
+						format: args.format as OutputFormat,
+						columns: bankAccountColumns,
+					});
 				} catch (e) {
 					outputError(e);
 				}
@@ -42,7 +46,10 @@ export const bankCommand = defineCommand({
 				try {
 					const client = createClient(getCompanyId());
 					const accounts = await client.bankAccounts.list(args.enabled);
-					output(accounts, { format: args.format as OutputFormat });
+					output(accounts, {
+						format: args.format as OutputFormat,
+						columns: bankAccountColumns,
+					});
 				} catch (e) {
 					outputError(e);
 				}
@@ -108,16 +115,17 @@ export const bankCommand = defineCommand({
 						search: args.search,
 					};
 
+					const fmtWithCols = { ...fmt, columns: transactionColumns };
 					if (args.all) {
 						const transactions = await client.bankTransactions.listAll(params);
-						output(transactions, fmt);
+						output(transactions, fmtWithCols);
 					} else {
 						const transactions = await client.bankTransactions.list({
 							...params,
 							page: Number(args.page),
 							pageSize: Number(args["page-size"]),
 						});
-						output(transactions, fmt);
+						output(transactions, fmtWithCols);
 					}
 				} catch (e) {
 					outputError(e);
@@ -135,7 +143,10 @@ export const bankCommand = defineCommand({
 				try {
 					const client = createClient(getCompanyId());
 					const transactions = await client.bankTransactions.unimputed();
-					output(transactions, { format: args.format as OutputFormat });
+					output(transactions, {
+						format: args.format as OutputFormat,
+						columns: transactionColumns,
+					});
 				} catch (e) {
 					outputError(e);
 				}

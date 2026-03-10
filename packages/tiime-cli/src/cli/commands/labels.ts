@@ -1,6 +1,7 @@
 import { defineCommand } from "citty";
 import { createClient, getCompanyId } from "../config";
 import { formatArg, type OutputFormat, output, outputError } from "../output";
+import { labelColumns } from "../table-columns";
 
 export const labelsCommand = defineCommand({
 	meta: { name: "labels", description: "Gestion des labels et tags" },
@@ -12,7 +13,10 @@ export const labelsCommand = defineCommand({
 				try {
 					const client = createClient(getCompanyId());
 					const labels = await client.labels.list();
-					output(labels, { format: args.format as OutputFormat });
+					output(labels, {
+						format: args.format as OutputFormat,
+						columns: labelColumns,
+					});
 				} catch (e) {
 					outputError(e);
 				}

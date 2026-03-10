@@ -1,6 +1,7 @@
 import { defineCommand } from "citty";
 import { createClient, getCompanyId } from "../config";
 import { formatArg, type OutputFormat, output, outputError } from "../output";
+import { expenseColumns } from "../table-columns";
 
 export const expensesCommand = defineCommand({
 	meta: { name: "expenses", description: "Gestion des notes de frais" },
@@ -19,7 +20,10 @@ export const expensesCommand = defineCommand({
 				try {
 					const client = createClient(getCompanyId());
 					const expenses = await client.expenseReports.list(args.sort);
-					output(expenses, { format: args.format as OutputFormat });
+					output(expenses, {
+						format: args.format as OutputFormat,
+						columns: expenseColumns,
+					});
 				} catch (e) {
 					outputError(e);
 				}
