@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.4.0
+
+### Minor Changes
+
+- [`4249e25`](https://github.com/yabbal/tiime/commit/4249e255d733ce8b65c8282b6a1c17302eab6b87) Thanks [@yabbal](https://github.com/yabbal)! - Add `company vat` command to display intracom VAT number
+
 ## 2.3.0
 
 ### Minor Changes
